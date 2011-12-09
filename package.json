@@ -1,0 +1,14 @@
+{
+  "name": "fwapi",
+  "description": "Firewall API for Smart DataCenter",
+  "version": "0.0.1",
+  "author": "Joyent",
+  "private": true,
+  "devDependencies": {
+    "tap": "0.1",
+    "jison": "0.2"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/tap ./test/*.js"
+  }
+}
