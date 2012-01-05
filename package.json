@@ -8,6 +8,13 @@
     "tap": "0.1",
     "jison": "0.2"
   },
+  "dependencies": {
+    "restify": "0.5",
+    "ldapjs": "0.4.1",
+    "lru-cache": "1.0.5",
+    "sprintf": "0.1.1",
+    "node-uuid": "1.2.0"
+  },
   "scripts": {
     "test": "./node_modules/.bin/tap ./test/*.js"
   }

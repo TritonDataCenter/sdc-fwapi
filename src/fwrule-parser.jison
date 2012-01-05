@@ -21,7 +21,7 @@ H                       [a-f0-9]
 
 '('                     return '(';
 ')'                     return ')';
-"OR"                    return 'OR';
+[Oo][Rr]                return 'OR';
 [Aa][Nn][Dd]            return 'AND';
 
 [Bb][Ll][Oo][Cc][Kk]    return 'BLOCK';
@@ -71,36 +71,36 @@ target
 /* Targets for 'FROM' and 'TO' */
 all
     : ALL
-        { $$ = [ { 'wildcard': $1 } ]; }
+        { $$ = [ ['wildcard', $1] ]; }
     | '(' ALL ')'
-        { $$ = [ { 'wildcard': $2 } ]; }
+        { $$ = [ ['wildcard', $2] ]; }
     ;
 
 any
     : ANY
-        { $$ = [ { 'wildcard': $1 } ]; }
+        { $$ = [ ['wildcard', $1] ]; }
     | '(' ANY ')'
-        { $$ = [ { 'wildcard': $2 } ]; }
+        { $$ = [ ['wildcard', $2] ]; }
     ;
 
 ip
     : IP IPADDR
-        { $$ = [ { 'ip': $2 } ]; }
+        { $$ = [ ['ip', $2] ]; }
     ;
 
 subnet
     : SUBNET IPADDR CIDRSUFFIX
-        { $$ = [ { 'subnet': $2 + $3 } ]; }
+        { $$ = [ ['subnet', $2 + $3] ]; }
     ;
 
 machine
     : MACHINE UUID
-        { $$ = [ { 'machine': $2 } ]; }
+        { $$ = [ ['machine', $2] ]; }
     ;
 
 tag
     : TAG TAGTXT
-        { $$ = [ { 'tag': $2 } ]; }
+        { $$ = [ ['tag', $2] ]; }
     ;
 
 
