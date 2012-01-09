@@ -21,8 +21,8 @@ test('tags', function(t) {
     port: [ 80 ],
     action: 'allow',
     enabled: false,
-    to_tag: [ 'some-tag' ],
-    from_ip: [ '1.2.3.4' ],
+    totag: [ 'some-tag' ],
+    fromip: [ '1.2.3.4' ],
   };
 
   var data = fwrule.parseRule({ rule: ruleTxt });

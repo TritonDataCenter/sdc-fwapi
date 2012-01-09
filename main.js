@@ -21,8 +21,9 @@ var config = {
     "password": "secret",
     "caching": true
   },
+  dataCenterName: "us-west-1",
   "logLevel": "Debug"
-  // "logLevel": "Trace"
+  //"logLevel": "Trace"
 };
 
 
