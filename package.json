@@ -5,7 +5,7 @@
   "author": "Joyent",
   "private": true,
   "devDependencies": {
-    "tap": "0.1",
+    "tap": "0.2",
     "jison": "0.2"
   },
   "dependencies": {

@@ -85,12 +85,14 @@ any
 
 ip
     : IP IPADDR
-        { $$ = [ ['ip', $2] ]; }
+        { yy.validateIPv4address($2);
+          $$ = [ ['ip', $2] ]; }
     ;
 
 subnet
     : SUBNET IPADDR CIDRSUFFIX
-        { $$ = [ ['subnet', $2 + $3] ]; }
+        { yy.validateIPv4subnet($2 + $3);
+            $$ = [ ['subnet', $2 + $3] ]; }
     ;
 
 machine
