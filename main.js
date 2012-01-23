@@ -21,6 +21,11 @@ var config = {
     "password": "secret",
     "caching": true
   },
+  "mapi": {
+    "username": "admin",
+    "password": "tot@ls3crit",
+    "uri": "http://10.99.99.8:80"
+  },
   dataCenterName: "us-west-1",
   "logLevel": "Debug"
   //"logLevel": "Trace"
@@ -38,8 +43,8 @@ function main() {
     theApp = app;
     app.listen(function() {
       var addr = app.server.address();
-      log.info(constants.serverName + ' listening on <http://%s:%s>.',
-        addr.address, addr.port);
+      log.info('%s listening on <http://%s:%s>.',
+        constants.serverName, addr.address, addr.port);
     });
   });
 

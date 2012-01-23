@@ -13,7 +13,8 @@
     "ldapjs": "0.4.1",
     "lru-cache": "1.0.5",
     "sprintf": "0.1.1",
-    "node-uuid": "1.2.0"
+    "node-uuid": "1.2.0",
+    "async": "0.1"
   },
   "scripts": {
     "test": "./node_modules/.bin/tap ./test/*.js"

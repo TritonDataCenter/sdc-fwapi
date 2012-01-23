@@ -1,0 +1,9 @@
+dn: datacenter=us-west-1, o=smartdc
+datacenter: us-west-1
+company: Joyent
+address: One Embarcadero Center
+objectclass: datacenter
+
+dn: ou=fwrules, datacenter=us-west-1, o=smartdc
+ou: fwrules
+objectclass: organizationalUnit
