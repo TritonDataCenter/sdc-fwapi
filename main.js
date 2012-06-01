@@ -5,8 +5,9 @@
  *
  */
 
+var bunyan = require('bunyan');
 var restify = require('restify');
-var log = restify.log;
+
 var createApp = require('./lib/app').createApp;
 var constants = require('./lib/constants');
 
@@ -16,7 +17,7 @@ var config = {
   "address": "0.0.0.0",
   "ufds": {
     // XXX: if you put an invalid port here, ldapjs does nothing!?
-    "url": "ldaps://localhost:1636",
+    "url": "ldaps://10.99.99.13:636",
     "rootDn": "cn=root",
     "password": "secret",
     "caching": true
@@ -34,10 +35,19 @@ var config = {
 
 function main() {
   var theApp;
+  var log = bunyan.createLogger({
+      name: 'fwapi',
+      level: 'debug',
+      serializers: {
+          err: bunyan.stdSerializers.err,
+          req: bunyan.stdSerializers.req,
+          res: restify.bunyan.serializers.response
+      }
+  });
 
-  createApp(config, function(err, app) {
+  createApp({ config: config, log: log }, function(err, app) {
     if (err) {
-      log.error("Error creating app: %s", err);
+      log.error(err, "Error creating app");
       process.exit(1);
     }
     theApp = app;

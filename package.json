@@ -9,7 +9,8 @@
     "jison": "0.2"
   },
   "dependencies": {
-    "restify": "0.5",
+    "restify": "1.4",
+    "bunyan": "0.7",
     "ldapjs": "0.4.1",
     "lru-cache": "1.0.5",
     "sprintf": "0.1.1",
