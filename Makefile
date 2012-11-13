@@ -22,28 +22,29 @@ TAP		:= ./node_modules/.bin/tap
 #
 # Files
 #
-DOC_FILES	 = index.restdown
+DOC_FILES	 = index.restdown fwapi.restdown
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
-JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
+JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 
+
+NODE_PREBUILT_VERSION=v0.8.14
+NODE_PREBUILT_TAG=zone
+
+
 include ./tools/mk/Makefile.defs
-include ./tools/mk/Makefile.node.defs
+include ./tools/mk/Makefile.node_prebuilt.defs
 include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
 
-TOP             := $(shell pwd)
-RELEASE_TARBALL := fwapi-pkg-$(STAMP).tar.bz2
-PKGDIR          := $(TOP)/$(BUILD)/pkg
-INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 #
 # Repo-specific targets
 #
 .PHONY: all
-all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS) deps
+all: $(SMF_MANIFESTS) | $(TAP) $(REPO_DEPS)
 	$(NPM) rebuild
 
 $(TAP): | $(NPM_EXEC)
@@ -54,10 +55,6 @@ CLEAN_FILES += $(TAP) ./node_modules/tap
 .PHONY: test
 test: $(TAP)
 	TAP=1 $(TAP) test/*.test.js
-
-.PHONY: deps
-deps: | $(NPM_EXEC) deps/node-sdc-clients/.git
-	$(NPM) install deps/node-sdc-clients
 
 #
 # Packaging targets
@@ -105,7 +102,7 @@ publish: release
 # Includes
 #
 include ./tools/mk/Makefile.deps
-include ./tools/mk/Makefile.node.targ
+include ./tools/mk/Makefile.node_prebuilt.targ
 include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
