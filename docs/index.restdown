@@ -93,6 +93,23 @@ Modifies a rule.
     }
 
 
+## DELETE /rules/:uuid
+
+Modifies a rule.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||user||UUID||Owner UUID of the rule||
+
+### Example: delete a rule
+
+    DELETE /rules/42859d04-c0f1-47d1-910e-382ffe07d029
+        -d user=00000000-0000-0000-0000-000000000000
+
+    {}
+
+
 
 
 # Changelog
