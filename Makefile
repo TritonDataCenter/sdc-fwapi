@@ -31,6 +31,8 @@ include ./tools/mk/Makefile.node_prebuilt.defs
 include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
 
+TOP             := $(shell pwd)
+RELEASE_TARBALL := fwapi-pkg-$(STAMP).tar.bz2
 PKGDIR          := $(TOP)/$(BUILD)/pkg
 INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 
