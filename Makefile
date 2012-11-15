@@ -1,18 +1,9 @@
 #
 # Copyright (c) 2012, Joyent, Inc. All rights reserved.
 #
-# Makefile: basic Makefile for template API service
+# FWAPI Makefile
 #
-# This Makefile is a template for new repos. It contains only repo-specific
-# logic and uses included makefiles to supply common targets (javascriptlint,
-# jsstyle, restdown, etc.), which are used by other repos as well. You may well
-# need to rewrite most of this file, but you shouldn't need to touch the
-# included makefiles.
-#
-# If you find yourself adding support for new targets that could be useful for
-# other projects too, you should add these to the original versions of the
-# included Makefiles (in eng.git) so that other teams can use them too.
-#
+
 
 #
 # Tools
@@ -22,7 +13,7 @@ TAP		:= ./node_modules/.bin/tap
 #
 # Files
 #
-DOC_FILES	 = index.restdown fwapi.restdown
+DOC_FILES	 = index.restdown
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
@@ -39,6 +30,9 @@ include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node_prebuilt.defs
 include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
+
+PKGDIR          := $(TOP)/$(BUILD)/pkg
+INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 
 #
 # Repo-specific targets
@@ -71,6 +65,7 @@ pkg: all $(SMF_MANIFESTS)
 	@touch $(PKGDIR)/site/.do-not-delete-me
 	cp -r $(TOP)/server.js \
 		$(TOP)/bin \
+		$(TOP)/sbin \
 		$(TOP)/lib \
 		$(TOP)/node_modules \
 		$(INSTDIR)/
@@ -85,6 +80,7 @@ pkg: all $(SMF_MANIFESTS)
 	find $(INSTDIR) -name config.log | xargs rm -rf   # waf build file
 	find $(INSTDIR) -name test | xargs rm -rf   # waf build file
 	rm -rf $(INSTDIR)/node_modules/tap	# we don't need to run tests
+	rm -rf $(INSTDIR)/node_modules/jison	# or to regenerate the parser
 
 $(RELEASE_TARBALL): pkg
 	(cd $(PKGDIR) && $(TAR) -jcf $(TOP)/$(RELEASE_TARBALL) root site)

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
 <!--
-    Networking API SMF manifest
+    Firewall API SMF manifest
 
 	Copyright (c) 2012, Joyent, Inc. All rights reserved.
  -->
@@ -16,7 +16,7 @@
 	<service_fmri value="svc:/system/filesystem/local" />
 </dependency>
 
-<exec_method type="method" name="start" exec="/opt/smartdc/fwapi/bin/fwapi &amp;" timeout_seconds="30" />
+<exec_method type="method" name="start" exec="/opt/smartdc/fwapi/sbin/fwapid &amp;" timeout_seconds="30" />
 <exec_method type="method" name="stop" exec=":kill" timeout_seconds="30" />
 
 <instance name="default" enabled="true" />

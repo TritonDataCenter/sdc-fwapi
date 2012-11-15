@@ -1,0 +1,102 @@
+---
+title: Firewall API (FWAPI)
+markdown2extras: wiki-tables, code-friendly
+apisections: Rules
+---
+
+# FWAPI (Firewall API)
+
+This is the reference documentation for FWAPI, the firewall API for
+SmartDataCenter (SDC).
+
+
+
+# Overview
+
+An overview should probably go here.
+
+
+
+# Rules
+
+These endpoints manage firewall rules.
+
+
+## GET /rules
+
+Returns a list of all rules.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||user||UUID||Owner UUID to filter by||
+
+### Example: list all rules belonging to the admin user
+
+    GET /rules
+        -d user=00000000-0000-0000-0000-000000000000
+
+    [
+      {
+        "id": "42859d04-c0f1-47d1-910e-382ffe07d029",
+        "enabled": "true",
+        "rule": "FROM machine 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+        "user": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+
+
+## GET /rules/:uuid
+
+Returns a rule.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||user||UUID||Owner UUID of the rule||
+
+### Example: get a rule belonging to the admin user
+
+    GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
+        -d user=00000000-0000-0000-0000-000000000000
+
+    {
+      "id": "42859d04-c0f1-47d1-910e-382ffe07d029",
+      "enabled": "true",
+      "rule": "FROM machine 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+      "user": "00000000-0000-0000-0000-000000000000"
+    }
+
+
+## PUT /rules/:uuid
+
+Modifies a rule.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||user||UUID||Owner UUID of the rule||
+||enabled||Boolean||Whether or not the rule is enabled||
+||rule||String||The rule text||
+
+### Example: disable a rule
+
+    GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
+        -d user=00000000-0000-0000-0000-000000000000
+        -d enabled=false
+
+    {
+      "id": "42859d04-c0f1-47d1-910e-382ffe07d029",
+      "enabled": "false",
+      "rule": "FROM machine 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+      "user": "00000000-0000-0000-0000-000000000000"
+    }
+
+
+
+
+# Changelog
+
+## 2012-11-14
+
+  * TODO: add to this changelog

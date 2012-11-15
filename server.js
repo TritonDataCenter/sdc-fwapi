@@ -1,80 +1,88 @@
 /*
- * Copyright (c) 2011 Joyent, Inc.  All rights reserved.
+ * Copyright (c) 2012 Joyent, Inc.  All rights reserved.
  *
  * Main entry-point for the firewall API.
- *
  */
 
+var fwapi = require('./lib/app');
+var assert = require('assert-plus');
 var bunyan = require('bunyan');
+var fs = require('fs');
 var restify = require('restify');
 
-var createApp = require('./lib/app').createApp;
-var constants = require('./lib/constants');
-
-// var extraConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-var config = {
-  "port": 8080,
-  "address": "0.0.0.0",
-  "ufds": {
-    // XXX: if you put an invalid port here, ldapjs does nothing!?
-    "url": "ldaps://10.99.99.13:636",
-    "rootDn": "cn=root",
-    "password": "secret",
-    "caching": true
-  },
-  "mapi": {
-    "username": "admin",
-    "password": "tot@ls3crit",
-    "uri": "http://10.99.99.8:80"
-  },
-  dataCenterName: "us-west-1",
-  "logLevel": "Debug"
-  //"logLevel": "Trace"
-};
 
 
+//---- Globals
+
+
+
+var CONFIG_FILE = __dirname + '/config.json';
+
+
+
+//--- Functions
+
+
+
+/**
+ * Loads the config, throwing an error if the config is incomplete / invalid
+ */
+function loadConfig(configFile) {
+  assert.string(configFile, 'configFile');
+  var config = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+  if (!config.hasOwnProperty('port')) {
+    config.port = 80;
+  }
+
+  return config;
+}
+
+
+/**
+ * Main entry point
+ */
 function main() {
-  var theApp;
+  var server;
   var log = bunyan.createLogger({
-      name: 'fwapi',
-      level: 'debug',
-      serializers: {
-          err: bunyan.stdSerializers.err,
-          req: bunyan.stdSerializers.req,
-          res: restify.bunyan.serializers.response
-      }
+    name: 'fwapi',
+    level: 'debug',
+    serializers: {
+      err: bunyan.stdSerializers.err,
+      req: bunyan.stdSerializers.req,
+      res: restify.bunyan.serializers.response
+    }
   });
+  log.info('Loading config file: %s', CONFIG_FILE);
+  var config = loadConfig(CONFIG_FILE);
+  if (config.hasOwnProperty('logLevel')) {
+    log.level(config.logLevel);
+  }
 
-  createApp({ config: config, log: log }, function(err, app) {
+  fwapi.create({ config: config, log: log }, function (err, app) {
     if (err) {
-      log.error(err, "Error creating app");
+      log.error(err, 'Error creating server');
       process.exit(1);
     }
-    theApp = app;
-    app.listen(function() {
+
+    server = app;
+    server.listen(function () {
       var addr = app.server.address();
-      log.info('%s listening on <http://%s:%s>.',
-        constants.serverName, addr.address, addr.port);
+      log.info('%s listening on <http://%s:%s>',
+        app.server.name, addr.address, addr.port);
     });
   });
 
   // Try to ensure we clean up properly on exit.
-  function closeApp(callback) {
-    if (theApp) {
-      log.info("Closing app.");
-      theApp.close(callback);
-    } else {
-      log.debug("No app to close.");
-      callback();
+  process.on('SIGINT', function _cleanup() {
+    log.info('SIGINT: cleaning up');
+    if (!server) {
+      return process.exit(1);
     }
-  }
-  process.on("SIGINT", function() {
-    log.debug("SIGINT. Cleaning up.")
-    closeApp(function () {
+    log.info('Closing app');
+    return server.close(function () {
       process.exit(1);
     });
   });
 }
 
 main();
-

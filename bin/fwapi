@@ -2,9 +2,16 @@
 
 TOP=$(unset CDPATH; cd $(dirname $0)/../; pwd)
 NODE_INSTALL=${TOP}/node
+BUNYAN=${TOP}/node_modules/.bin/bunyan
+SVC=fwapi
+
 if [[ ! -d "${NODE_INSTALL}" && -d "${TOP}/build/node" ]]; then
     # Dev/repo layout.
     NODE_INSTALL=${TOP}/build/node
 fi
 
-${NODE_INSTALL}/bin/node ${TOP}/server.js "$@"
+[[ "$1" == "log" ]] && ${BUNYAN} $(svcs -L ${SVC}) && exit 0
+[[ "$1" == "lastlog" ]] && tail -n 20 $(svcs -L ${SVC}) | ${BUNYAN} && exit 0
+[[ "$1" == "tail" ]] && exec tail -f $(svcs -L ${SVC}) | ${BUNYAN}
+
+${NODE_INSTALL}/bin/node ${TOP}/lib/cli.js "$@"
