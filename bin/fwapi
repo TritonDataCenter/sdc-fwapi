@@ -14,4 +14,4 @@ fi
 [[ "$1" == "lastlog" ]] && tail -n 20 $(svcs -L ${SVC}) | ${BUNYAN} && exit 0
 [[ "$1" == "tail" ]] && exec tail -f $(svcs -L ${SVC}) | ${BUNYAN}
 
-${NODE_INSTALL}/bin/node ${TOP}/lib/cli.js "$@"
+${NODE_INSTALL}/bin/node ${TOP}/lib/fwapi-cli.js "$@"
