@@ -16,6 +16,44 @@ SmartDataCenter (SDC).
 An overview should probably go here.
 
 
+# Rule Syntax
+
+
+## Examples
+
+
+Allow incoming http traffic to a VM:
+
+    {
+        "enabled": true,
+        "rule": "FROM subnet 10.99.99.0/24 TO vm 0abeae82-c040-4080-ac60-b60d3e3890a7 ALLOW tcp port 80"
+    }
+
+
+Block outgoing SMTP traffic from a VM to a subnet:
+
+    {
+        "enabled": true,
+        "rule": "FROM vm 0abeae82-c040-4080-ac60-b60d3e3890a7 TO subnet 10.99.99.0/24 BLOCK tcp port 25"
+    }
+
+
+Allow an IP HTTP and HTTPS access to all VMs tagged www or testwww:
+
+    {
+        "enabled": true,
+        "rule": "FROM ip 10.99.99.7 TO (tag www OR tag testwww) ALLOW tcp (port 80 AND port 443)"
+    }
+
+
+Allow syslog traffic from VMs tagged www to VMs taged mon:
+
+    {
+        "enabled": true,
+        "rule": "FROM tag www TO tag mon ALLOW udp port 514"
+    }
+
+
 
 # Rules
 
@@ -29,19 +67,19 @@ Returns a list of all rules.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||user||UUID||Owner UUID to filter by||
+||owner_uuid||UUID||Owner UUID to filter by||
 
-### Example: list all rules belonging to the admin user
+### Example: list all rules belonging to the admin owner_uuid
 
     GET /rules
-        -d user=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=00000000-0000-0000-0000-000000000000
 
     [
       {
-        "id": "42859d04-c0f1-47d1-910e-382ffe07d029",
+        "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
         "enabled": "true",
-        "rule": "FROM machine 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-        "user": "00000000-0000-0000-0000-000000000000"
+        "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+        "owner_uuid": "00000000-0000-0000-0000-000000000000"
       }
     ]
 
@@ -53,18 +91,18 @@ Returns a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||user||UUID||Owner UUID of the rule||
+||owner_uuid||UUID||Owner UUID of the rule||
 
-### Example: get a rule belonging to the admin user
+### Example: get a rule belonging to the admin owner_uuid
 
     GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d user=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=00000000-0000-0000-0000-000000000000
 
     {
-      "id": "42859d04-c0f1-47d1-910e-382ffe07d029",
+      "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
       "enabled": "true",
-      "rule": "FROM machine 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "user": "00000000-0000-0000-0000-000000000000"
+      "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+      "owner_uuid": "00000000-0000-0000-0000-000000000000"
     }
 
 
@@ -75,21 +113,46 @@ Modifies a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||user||UUID||Owner UUID of the rule||
+||owner_uuid||UUID||Owner UUID of the rule||
 ||enabled||Boolean||Whether or not the rule is enabled||
 ||rule||String||The rule text||
 
 ### Example: disable a rule
 
     GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d user=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=00000000-0000-0000-0000-000000000000
         -d enabled=false
 
     {
-      "id": "42859d04-c0f1-47d1-910e-382ffe07d029",
+      "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
       "enabled": "false",
-      "rule": "FROM machine 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "user": "00000000-0000-0000-0000-000000000000"
+      "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+      "owner_uuid": "00000000-0000-0000-0000-000000000000"
+    }
+
+
+## POST /rules
+
+Creates a rule.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||owner_uuid||UUID||Owner UUID of the rule||
+||enabled||Boolean||Whether or not the rule is enabled||
+||rule||String||The rule text (see [Rule Syntax](#rule-syntax))||
+
+### Example: disable a rule
+
+    POST /rules/42859d04-c0f1-47d1-910e-382ffe07d029
+        -d owner_uuid=00000000-0000-0000-0000-000000000000
+        -d enabled=false
+
+    {
+      "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
+      "enabled": "false",
+      "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
+      "owner_uuid": "00000000-0000-0000-0000-000000000000"
     }
 
 
@@ -100,12 +163,12 @@ Modifies a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||user||UUID||Owner UUID of the rule||
+||owner_uuid||UUID||Owner UUID of the rule||
 
 ### Example: delete a rule
 
     DELETE /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d user=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=00000000-0000-0000-0000-000000000000
 
     {}
 
