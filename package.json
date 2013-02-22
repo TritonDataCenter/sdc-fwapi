@@ -14,7 +14,7 @@
     "bunyan": "0.16",
     "clone": "0.1",
     "extsprintf": "1.0.2",
-    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#e13f451",
+    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#360b15b",
     "node-uuid": "1.2.0",
     "nopt": "1.0",
     "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#afb413f",
