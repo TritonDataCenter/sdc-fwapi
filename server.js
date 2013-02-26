@@ -46,11 +46,7 @@ function main() {
   var log = bunyan.createLogger({
     name: 'fwapi',
     level: 'debug',
-    serializers: {
-      err: bunyan.stdSerializers.err,
-      req: bunyan.stdSerializers.req,
-      res: restify.bunyan.serializers.response
-    }
+    serializers: restify.bunyan.serializers
   });
 
   log.info('Loading config file: %s', CONFIG_FILE);
