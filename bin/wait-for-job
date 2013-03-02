@@ -1,17 +1,18 @@
 #!/usr/node/bin/node
 
+var fs = require('fs');
 var workflow = require('../lib/util/workflow');
 
 
-var WFAPI_URL = 'http://10.99.99.15';
 var jobUUID = process.argv[2];
 if (!jobUUID) {
   console.error('Usage: wait-for-job [UUID]');
   process.exit(1);
 }
 
+var config = JSON.parse(fs.readFileSync(__dirname + '/../config.json'));
 var opts = {
-  url: WFAPI_URL,
+  url: config.wfapi.url,
   uuid: jobUUID
 };
 

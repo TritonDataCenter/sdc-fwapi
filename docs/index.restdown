@@ -53,6 +53,14 @@ Allow syslog traffic from VMs tagged www to VMs taged mon:
         "rule": "FROM tag www TO tag mon ALLOW udp port 514"
     }
 
+Allow incoming http traffic to VMs tagged www and owned by the admin user:
+
+    {
+        "enabled": true,
+        "owner_uuid": "00000000-0000-0000-0000-000000000000",
+        "rule": "FROM subnet 10.99.99.0/24 TO tag www ALLOW tcp port 80"
+    }
+
 
 
 # Rules
@@ -67,7 +75,7 @@ Returns a list of all rules.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID to filter by||
+||owner_uuid||UUID||Owner UUID to filter by (optional)||
 
 ### Example: list all rules belonging to the admin owner_uuid
 
@@ -91,7 +99,7 @@ Returns a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule||
+||owner_uuid||UUID||Owner UUID of the rule (optional)||
 
 ### Example: get a rule belonging to the admin owner_uuid
 
@@ -113,7 +121,7 @@ Modifies a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule||
+||owner_uuid||UUID||Owner UUID of the rule (optional)||
 ||enabled||Boolean||Whether or not the rule is enabled||
 ||rule||String||The rule text||
 
@@ -131,6 +139,22 @@ Modifies a rule.
     }
 
 
+## GET /rules/:uuid/vms
+
+Returns the VMs affected by a rule.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||owner_uuid||UUID||Owner UUID of the rule (optional)||
+
+### Example: get the UUIDs of VMs affected by a rule
+
+    GET /rules/fb5ad3b7-9602-43c8-b286-8a7c0627a438/vms | json -a uuid
+        2a832664-a9b5-40e7-b1bf-43ad90ac4172
+        2ca7d243-215f-41d7-a8ed-c83e4712a8bf
+
+
 ## POST /rules
 
 Creates a rule.
@@ -138,8 +162,8 @@ Creates a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule||
-||enabled||Boolean||Whether or not the rule is enabled||
+||owner_uuid||UUID||Owner UUID of the rule (optional)||
+||enabled||Boolean||Whether or not the rule is enabled (optional, defaults to false)||
 ||rule||String||The rule text (see [Rule Syntax](#rule-syntax))||
 
 ### Example: disable a rule
@@ -163,7 +187,7 @@ Modifies a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule||
+||owner_uuid||UUID||Owner UUID of the rule (optional)||
 
 ### Example: delete a rule
 
@@ -174,9 +198,33 @@ Modifies a rule.
 
 
 
+## GET /firewalls/vms/:uuid/vms
+
+Returns the rules that apply to a VM.
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||owner_uuid||UUID||Owner UUID of the rule (optional)||
+
+### Example: get the UUIDs of VMs affected by a rule
+
+    GET /firewalls/vms/2ca7d243-215f-41d7-a8ed-c83e4712a8bf
+
+    [
+      {
+        "enabled": true,
+        "rule": "FROM ip 10.88.88.2 TO tag tag2 ALLOW tcp PORT 80",
+        "uuid": "fb5ad3b7-9602-43c8-b286-8a7c0627a438",
+        "version": "1362178611215.099554"
+      }
+    ]
+
+
 
 # Changelog
 
-## 2012-11-14
+## 2013-03-01
 
-  * TODO: add to this changelog
+  * Added /rules/:uuid/vms endpoint
+  * Added /firewalls/vms/:uuid endpoint
