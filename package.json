@@ -13,7 +13,7 @@
     "bunyan": "0.20.0",
     "clone": "0.1",
     "extsprintf": "1.0.2",
-    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#5198f13",
+    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#87d0637",
     "node-uuid": "1.2.0",
     "nopt": "1.0",
     "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#fe76c2f",
@@ -21,7 +21,7 @@
     "vasync": "1.3",
     "verror": "1.3",
     "wf-client": "git+ssh://git@git.joyent.com:wf-client.git#7601cae",
-    "wf-shared": "git+ssh://git@git.joyent.com:wf-shared.git#b49a668"
+    "wf-shared": "git+ssh://git@git.joyent.com:wf-shared.git#82d03f8"
   },
   "scripts": {
     "test": "./node_modules/.bin/tap ./test/*.js"
