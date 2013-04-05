@@ -57,7 +57,7 @@ Allow incoming http traffic to VMs tagged www and owned by the admin user:
 
     {
         "enabled": true,
-        "owner_uuid": "00000000-0000-0000-0000-000000000000",
+        "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
         "rule": "FROM subnet 10.99.99.0/24 TO tag www ALLOW tcp port 80"
     }
 
@@ -80,14 +80,14 @@ Returns a list of all rules.
 ### Example: list all rules belonging to the admin owner_uuid
 
     GET /rules
-        -d owner_uuid=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
 
     [
       {
         "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
         "enabled": "true",
         "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-        "owner_uuid": "00000000-0000-0000-0000-000000000000"
+        "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
       }
     ]
 
@@ -104,13 +104,13 @@ Returns a rule.
 ### Example: get a rule belonging to the admin owner_uuid
 
     GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d owner_uuid=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
 
     {
       "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
       "enabled": "true",
       "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "owner_uuid": "00000000-0000-0000-0000-000000000000"
+      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
     }
 
 
@@ -128,14 +128,14 @@ Modifies a rule.
 ### Example: disable a rule
 
     GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d owner_uuid=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
         -d enabled=false
 
     {
       "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
       "enabled": "false",
       "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "owner_uuid": "00000000-0000-0000-0000-000000000000"
+      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
     }
 
 
@@ -169,14 +169,14 @@ Creates a rule.
 ### Example: disable a rule
 
     POST /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d owner_uuid=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
         -d enabled=false
 
     {
       "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
       "enabled": "false",
       "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "owner_uuid": "00000000-0000-0000-0000-000000000000"
+      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
     }
 
 
@@ -192,7 +192,7 @@ Modifies a rule.
 ### Example: delete a rule
 
     DELETE /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d owner_uuid=00000000-0000-0000-0000-000000000000
+        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
 
     {}
 
