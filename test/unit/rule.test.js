@@ -10,10 +10,28 @@ var util = require('util');
 var util_ip = require('../../lib/util/ip');
 
 
+
+// --- Helper functions
+
+
+
 function subnetNumber(subnet) {
   var split = subnet.split('/');
   return util_ip.aton(split[0]) + '/' + split[1];
 }
+
+
+function rawTag(key, val) {
+  if (val === undefined) {
+    return util.format('%s==%d', key, key.length);
+  } else {
+    return util.format('%s=%s=%d', key, val, key.length);
+  }
+}
+
+
+// --- Tests
+
 
 
 exports['all target types'] = function (t) {
@@ -36,12 +54,12 @@ exports['all target types'] = function (t) {
   var raw = {
     fromip: [util_ip.aton(ips[0])],
     fromsubnet: [subnetNumber(subnets[0])],
-    fromtag: [tags[0]],
+    fromtag: [ rawTag(tags[0]) ],
     fromvm: [vms[0]],
 
     toip: [util_ip.aton(ips[1])],
     tosubnet: [subnetNumber(subnets[1])],
-    totag: [tags[1]],
+    totag: [ rawTag(tags[1]) ],
     tovm: [vms[1]],
 
     enabled: true,
@@ -110,6 +128,57 @@ exports['owner_uuid'] = function (t) {
   t.deepEqual(rule2.serialize(), inRule, 'rule2.serialize()');
   t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
     'rule2.dn');
+
+  t.done();
+};
+
+
+exports['multiple tags with multiple quoted values'] = function (t) {
+  var rule = mod_rule.create({
+    rule: 'FROM (tag "김치" = "백김치" OR tag "김치" = "白김치") TO '
+      + '(tag "some tag" = value OR tag some-tag = "another value") '
+      + 'ALLOW tcp PORT 80',
+  });
+
+  var raw = {
+    enabled: false,
+    objectclass: mod_rule.objectclass,
+    ports: [ 80 ],
+    action: 'allow',
+    protocol: 'tcp',
+    fromtag: [ rawTag('김치', '白김치'), rawTag('김치', '백김치') ],
+    totag: [ rawTag('some tag', 'value'), rawTag('some-tag', 'another value') ],
+    uuid: rule.uuid,
+    version: rule.version
+  };
+  t.deepEqual(rule.raw(), raw, 'rule.raw()');
+
+  var serialized = {
+    enabled: false,
+    rule: 'FROM (tag "김치" = "白김치" OR tag "김치" = "백김치") TO '
+      + '(tag "some tag" = value OR tag some-tag = "another value") '
+      + 'ALLOW tcp PORT 80',
+    uuid: rule.uuid,
+    version: rule.version
+  };
+  t.deepEqual(rule.serialize(), serialized, 'rule.serialize()');
+
+  t.ok(!rule.allVMs, 'rule.allVMs');
+
+  var ruleTags = [
+      [ 'some tag', 'value' ],
+      [ 'some-tag', 'another value' ],
+      [ '김치', '白김치' ],
+      [ '김치', '백김치' ]
+  ];
+  t.deepEqual(rule.tags, ruleTags, 'rule.tags');
+
+  // Now check that we can reconstruct this data from UFDS
+  rule = mod_rule.create(raw);
+  t.deepEqual(rule.raw(), raw, 'rule.raw()');
+  t.deepEqual(rule.raw(), raw, 'rule.raw()');
+  t.ok(!rule.allVMs, 'rule.allVMs');
+  t.deepEqual(rule.tags, ruleTags, 'rule.tags');
 
   t.done();
 };
