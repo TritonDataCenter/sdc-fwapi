@@ -34,6 +34,8 @@ function loadConfig(configFile) {
         config.port = 80;
     }
 
+    assert.optionalNumber(config.maxHttpSockets, 'config.maxHttpSockets');
+
     return config;
 }
 
@@ -58,7 +60,7 @@ function main() {
     try {
         server = fwapi.create({
             config: config,
-                log: log
+            log: log
         });
     } catch (err) {
         log.error(err, 'Error creating server');
