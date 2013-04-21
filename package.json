@@ -6,7 +6,7 @@
   "private": true,
   "devDependencies": {
     "mockery": "1.4.0",
-    "nodeunit": "0.7.4"
+    "nodeunit": "git://github.com/rgulewich/nodeunit.git#80a3876"
   },
   "dependencies": {
     "assert-plus": "0.1",

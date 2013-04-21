@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+# Copyright (c) 2013, Joyent, Inc. All rights reserved.
 #
 # FWAPI Makefile
 #
@@ -14,11 +14,11 @@ NODEUNIT		:= ./node_modules/.bin/nodeunit
 # Files
 #
 DOC_FILES	 = index.restdown
-JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
+JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js') bin/wait-for-job
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
-JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0
+JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 
 

@@ -4,7 +4,6 @@
  * Test helpers for FWAPI unit tests
  */
 
-//var ldapjs = require('ldapjs');
 var assert = require('assert-plus');
 var async = require('async');
 var app = require('../../lib/app');
@@ -44,65 +43,66 @@ var SERVER_UUID = mod_uuid.v4();
 
 
 function FakeWFAPI(params) {
-  this.log = params.log;
-  this.results = {};
+    this.log = params.log;
+    this.results = {};
 }
 
 
 FakeWFAPI.prototype.createJob = function _createJob(name, params, callback) {
-  var self = this;
-  var wf;
-  var uuid = mod_uuid.v4();
+    var self = this;
+    var wf;
+    var uuid = mod_uuid.v4();
 
-  switch (name) {
-  case 'fw-add':
-    wf = wf_add;
-    break;
-  case 'fw-del':
-    wf = wf_del;
-    break;
-  case 'fw-update':
-    wf = wf_update;
-    break;
-  default:
-    return callback(
-      new verror.VError('FakeWFAPI: unknown workflow "%s"', name));
-    break;
-  }
-
-  var chainDone = 0;
-  var lastTask = '';
-  var fns = [];
-  var job = {
-    log: self.log,
-    params : clone(params)
-  };
-
-  self.log.debug('workflow %s: begin', name);
-  async.forEachSeries(wf.chain, function (task, cb) {
-    lastTask = task.name;
-
-    self.log.debug('workflow %s/%s: start', name, task.name);
-    return task.body(job, function (err, res) {
-      chainDone++;
-      cb(err, res);
-    });
-  }, function (err) {
-    var res = {
-      done: (chainDone == wf.chain.length),
-      last: lastTask,
-      name: name
-    };
-
-    if (err) {
-      res.err = err;
+    switch (name) {
+    case 'fw-add':
+        wf = wf_add;
+        break;
+    case 'fw-del':
+        wf = wf_del;
+        break;
+    case 'fw-update':
+        wf = wf_update;
+        break;
+    default:
+        return callback(
+            new verror.VError('FakeWFAPI: unknown workflow "%s"', name));
+        /* jsl:ignore */
+        break;
+        /* jsl:end */
     }
 
-    self.results[uuid] = res;
-    self.log.debug('workflow %s: end', name);
+    var chainDone = 0;
+    var lastTask = '';
+    var job = {
+        log: self.log,
+        params : clone(params)
+    };
 
-    return callback(null, { uuid: uuid });
-  });
+    self.log.debug('workflow %s: begin', name);
+    async.forEachSeries(wf.chain, function (task, cb) {
+        lastTask = task.name;
+
+        self.log.debug('workflow %s/%s: start', name, task.name);
+        return task.body(job, function (err, res) {
+            chainDone++;
+            cb(err, res);
+        });
+    }, function (err) {
+        var res = {
+            done: (chainDone == wf.chain.length),
+            last: lastTask,
+            name: name
+        };
+
+        if (err) {
+            res.err = err;
+        }
+
+        self.results[uuid] = res;
+        self.log.debug('workflow %s: end', name);
+
+        return callback(null, { uuid: uuid });
+    });
 };
 
 
@@ -115,105 +115,105 @@ FakeWFAPI.prototype.createJob = function _createJob(name, params, callback) {
  * Creates a test NAPI server, and returns a client for accessing it
  */
 function createClientAndServer(callback) {
-  var log;
-  if (LOG) {
-    log = require('bunyan').createLogger({
-      level: (process.env.LOG_LEVEL || 'warn'),
-      name: process.argv[1],
-      stream: process.stderr,
-      serializers: restify.bunyan.serializers,
-      src: true
+    var log;
+    if (LOG) {
+        log = require('bunyan').createLogger({
+            level: (process.env.LOG_LEVEL || 'warn'),
+            name: process.argv[1],
+            stream: process.stderr,
+            serializers: restify.bunyan.serializers,
+            src: true
+        });
+
+    } else {
+        log = {
+            child: function () { return log; },
+            debug: function () { return false; },
+            error: function () { return false; },
+            info: function () { return false; },
+            trace: function () { return false; },
+            warn: function () { return false; }
+        };
+    }
+
+    setupMocks();
+    var server = app.create({
+        config: {
+            datacenter: 'coal',
+            port: 0,
+            ufds: { },
+            wfapi: { }
+        },
+        log: log
+    });
+    mocks._LOGGER = log;
+
+    server.ufds = new mocks['sdc-clients'].UFDS;
+    server.wfapi = new FakeWFAPI({ log: log });
+    // XXX: replace with a real mock
+    server.vmapi = {};
+
+    [wf_add, wf_update, wf_del].forEach(function (wf) {
+        wf._set({
+            cnapiUrl: 'http://unused',
+            ufdsDn: 'ou=fwrulesMock',
+            ufdsPassword: 'password',
+            ufdsUrl: 'http://unused'
+        });
+    });
+    fw_shared._set({
+        fwapiUrl: 'http://unused',
+        vmapiUrl: 'http://unused'
     });
 
-  } else {
-    log = {
-      child: function () { return log; },
-      debug: function () { return false; },
-      error: function () { return false; },
-      info: function () { return false; },
-      trace: function () { return false; },
-      warn: function () { return false; }
-    };
-  }
+    server.listen(function () {
+        SERVER = server;
 
-  setupMocks();
-  var server = app.create({
-    config: {
-      datacenter: 'coal',
-      port: 0,
-      ufds: { },
-      wfapi: { }
-    },
-    log: log,
-  });
-  mocks._LOGGER = log;
-
-  server.ufds = new mocks['sdc-clients'].UFDS;
-  server.wfapi = new FakeWFAPI({ log: log });
-  // XXX: replace with a real mock
-  server.vmapi = {};
-
-  [wf_add, wf_update, wf_del].forEach(function (wf) {
-    wf._set({
-      cnapiUrl: 'http://unused',
-      ufdsDn: 'ou=fwrulesMock',
-      ufdsPassword: 'password',
-      ufdsUrl: 'http://unused'
+        return callback(null, new fwapiClient({
+            agent: false,
+            url: server.info().url
+        }));
     });
-  });
-  fw_shared._set({
-    fwapiUrl: 'http://unused',
-    vmapiUrl: 'http://unused'
-  });
-
-  server.listen(function () {
-    SERVER = server;
-
-    return callback(null, new fwapiClient({
-      agent: false,
-      url: server.info().url
-    }));
-  });
 }
 
 
 function generateVM(override) {
-  var vm = {
-    firewall_enabled: true,
-    owner_uuid: OWNER_UUID,
-    server_uuid: SERVER_UUID,
-    tags: {},
-    uuid: mod_uuid.v4()
-  };
+    var vm = {
+        firewall_enabled: true,
+        owner_uuid: OWNER_UUID,
+        server_uuid: SERVER_UUID,
+        tags: {},
+        uuid: mod_uuid.v4()
+    };
 
-  if (!override || !override.hasOwnProperty('nics')) {
-    vm.nics = [{
-      ip: '10.0.2.' + CUR_IP++
-    }];
-  }
-
-  if (override) {
-    for (var o in override) {
-      vm[o] = override[o];
+    if (!override || !override.hasOwnProperty('nics')) {
+        vm.nics = [ {
+            ip: '10.0.2.' + CUR_IP++
+        } ];
     }
-  }
 
-  return vm;
+    if (override) {
+        for (var o in override) {
+            vm[o] = override[o];
+        }
+    }
+
+    return vm;
 }
 
 
 function setupMocks() {
-  mockery.enable({ warnOnUnregistered: false });
-  for (var m in mocks) {
-    if (m.indexOf('_') !== 0) {
-      mockery.registerMock(m, mocks[m]);
+    mockery.enable({ warnOnUnregistered: false });
+    for (var m in mocks) {
+        if (m.indexOf('_') !== 0) {
+            mockery.registerMock(m, mocks[m]);
+        }
     }
-  }
 
-  wf_add = require('../../lib/workflows/fw-add');
-  wf_del = require('../../lib/workflows/fw-del');
-  wf_update = require('../../lib/workflows/fw-update');
-  fw_shared = require('wf-shared').fwapi;
+    wf_add = require('../../lib/workflows/fw-add');
+    wf_del = require('../../lib/workflows/fw-del');
+    wf_update = require('../../lib/workflows/fw-update');
+    fw_shared = require('wf-shared').fwapi;
 }
 
 
@@ -221,11 +221,11 @@ function setupMocks() {
  * Stops the test NAPI server
  */
 function stopServer(callback) {
-  if (!SERVER) {
-    return callback();
-  }
+    if (!SERVER) {
+        return callback();
+    }
 
-  return SERVER.close(callback);
+    return SERVER.close(callback);
 }
 
 
@@ -233,7 +233,7 @@ function stopServer(callback) {
  * Sort by rule UUID
  */
 function uuidSort(a, b) {
-  return (a.uuid > b.uuid) ? 1 : -1;
+    return (a.uuid > b.uuid) ? 1 : -1;
 }
 
 
@@ -241,17 +241,17 @@ function uuidSort(a, b) {
  * Returns the workflow results
  */
 function wfResults() {
-  assert.object(SERVER);
+    assert.object(SERVER);
 
-  return SERVER.wfapi.results;
+    return SERVER.wfapi.results;
 }
 
 
 
 module.exports = {
-  createClientAndServer: createClientAndServer,
-  generateVM: generateVM,
-  stopServer: stopServer,
-  uuidSort: uuidSort,
-  wfResults: wfResults
+    createClientAndServer: createClientAndServer,
+    generateVM: generateVM,
+    stopServer: stopServer,
+    uuidSort: uuidSort,
+    wfResults: wfResults
 };
