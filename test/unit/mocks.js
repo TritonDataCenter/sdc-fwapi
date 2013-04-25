@@ -55,6 +55,21 @@ fakeCNAPIclient.prototype.getTask = function (id, callback) {
 };
 
 
+fakeCNAPIclient.prototype.listServers = function (params, callback) {
+    var servers = [];
+    for (var s in CNAPI_SERVERS) {
+        var server = CNAPI_SERVERS[s];
+        var obj = { uuid: s };
+        if (server.hasOwnProperty('sysinfo')) {
+            obj.sysinfo = server.sysinfo;
+        }
+        servers.push(obj);
+    }
+
+    return callback(null, servers);
+};
+
+
 fakeCNAPIclient.prototype.post = function (endpoint, params, callback) {
     var method;
     var routes = [

@@ -198,6 +198,16 @@ function generateVM(override) {
         }
     }
 
+    if (!mocks._SERVERS.hasOwnProperty(vm.server_uuid)) {
+        mocks._SERVERS[vm.server_uuid] = {};
+    }
+
+    if (!mocks._SERVERS[vm.server_uuid].hasOwnProperty('sysinfo')) {
+        mocks._SERVERS[vm.server_uuid].sysinfo = {
+            'SDC Version': '7.0'
+        };
+    }
+
     return vm;
 }
 
