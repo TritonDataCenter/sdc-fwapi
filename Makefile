@@ -22,7 +22,7 @@ JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 
 
-NODE_PREBUILT_VERSION=v0.8.22
+NODE_PREBUILT_VERSION=v0.8.23
 NODE_PREBUILT_TAG=zone
 
 
