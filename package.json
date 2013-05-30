@@ -17,7 +17,7 @@
     "extsprintf": "1.0.2",
     "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#4029bf0",
     "node-uuid": "1.2.0",
-    "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#fe76c2f",
+    "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#03e098c",
     "restify": "git+ssh://git@github.com:trentm/node-restify.git#7535bb3",
     "vasync": "1.3",
     "verror": "1.3",
