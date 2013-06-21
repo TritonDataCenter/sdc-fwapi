@@ -22,7 +22,7 @@
     "vasync": "1.3",
     "verror": "1.3",
     "wf-client": "git+ssh://git@git.joyent.com:wf-client.git#7601cae",
-    "wf-shared": "git+ssh://git@git.joyent.com:wf-shared.git#59ee313"
+    "wf-shared": "git+ssh://git@git.joyent.com:wf-shared.git#710c1ef"
   },
   "scripts": {
     "test": "./node_modules/.bin/tap ./test/*.js"
