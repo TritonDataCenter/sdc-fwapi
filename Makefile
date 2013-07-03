@@ -24,13 +24,24 @@ SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 
 
 NODE_PREBUILT_VERSION=v0.8.23
-NODE_PREBUILT_TAG=zone
-
+ifeq ($(shell uname -s),SunOS)
+	NODE_PREBUILT_TAG=zone
+	# Allow building on a smartos with a GCC version other than the
+	# sdcnode GCC build boxes.
+	NODE_PREBUILT_CC_VERSION=4.6.2
+endif
 
 include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node_prebuilt.defs
-include ./tools/mk/Makefile.node_deps.defs
+ifeq ($(shell uname -s),SunOS)
+	# Use an 'sdcnode' build on SmartOS.
+	include ./tools/mk/Makefile.node_prebuilt.defs
+else
+	# Build a node locally on non-SmartOS (e.g. Mac).
+	include ./tools/mk/Makefile.node.defs
+endif
 include ./tools/mk/Makefile.smf.defs
+
 
 TOP             := $(shell pwd)
 RELEASE_TARBALL := fwapi-pkg-$(STAMP).tar.bz2
@@ -48,15 +59,18 @@ all: $(SMF_MANIFESTS) | $(NODEUNIT) $(REPO_DEPS)
 $(NODEUNIT): | $(NPM_EXEC)
 	$(NPM) install
 
-CLEAN_FILES += $(NODEUNIT) ./node_modules/nodeunit
-
 .PHONY: test
 test: $(NODEUNIT)
 	$(NODEUNIT) --reporter=tap test/unit/*.test.js
 
-docs/rules.restdown: $(NODEUNIT) node_modules/fwrule/docs/rules.md
+node_modules/fwrule/docs/rules.md: | $(NPM_EXEC)
+	$(NPM) install fwrule
+
+docs/rules.restdown: node_modules/fwrule/docs/rules.md
 	cp docs/header.restdown docs/rules.restdown
 	cat node_modules/fwrule/docs/rules.md >> docs/rules.restdown
+
+CLEAN_FILES += ./node_modules $(BUILD)/docs docs/rules.restdown
 
 
 #
@@ -108,7 +122,10 @@ publish: release
 # Includes
 #
 include ./tools/mk/Makefile.deps
-include ./tools/mk/Makefile.node_prebuilt.targ
-include ./tools/mk/Makefile.node_deps.targ
+ifeq ($(shell uname -s),SunOS)
+	include ./tools/mk/Makefile.node_prebuilt.targ
+else
+	include ./tools/mk/Makefile.node.targ
+endif
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
