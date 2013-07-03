@@ -18,49 +18,8 @@ An overview should probably go here.
 
 # Rule Syntax
 
-
-## Examples
-
-
-Allow incoming http traffic to a VM:
-
-    {
-        "enabled": true,
-        "rule": "FROM subnet 10.99.99.0/24 TO vm 0abeae82-c040-4080-ac60-b60d3e3890a7 ALLOW tcp port 80"
-    }
-
-
-Block outgoing SMTP traffic from a VM to a subnet:
-
-    {
-        "enabled": true,
-        "rule": "FROM vm 0abeae82-c040-4080-ac60-b60d3e3890a7 TO subnet 10.99.99.0/24 BLOCK tcp port 25"
-    }
-
-
-Allow an IP HTTP and HTTPS access to all VMs tagged www or testwww:
-
-    {
-        "enabled": true,
-        "rule": "FROM ip 10.99.99.7 TO (tag www OR tag testwww) ALLOW tcp (port 80 AND port 443)"
-    }
-
-
-Allow syslog traffic from VMs tagged www to VMs taged mon:
-
-    {
-        "enabled": true,
-        "rule": "FROM tag www TO tag mon ALLOW udp port 514"
-    }
-
-Allow incoming http traffic to VMs tagged www and owned by the admin user:
-
-    {
-        "enabled": true,
-        "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
-        "rule": "FROM subnet 10.99.99.0/24 TO tag www ALLOW tcp port 80"
-    }
-
+Rules are written in a DSL - see the [rule syntax guide](rules.html) for a
+reference.
 
 
 # Rules

@@ -10,10 +10,11 @@
 #
 NODEUNIT		:= ./node_modules/.bin/nodeunit
 
+
 #
 # Files
 #
-DOC_FILES	 = index.restdown
+DOC_FILES	 = index.restdown rules.restdown
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js') bin/wait-for-job
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
@@ -36,6 +37,7 @@ RELEASE_TARBALL := fwapi-pkg-$(STAMP).tar.bz2
 PKGDIR          := $(TOP)/$(BUILD)/pkg
 INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 
+
 #
 # Repo-specific targets
 #
@@ -51,6 +53,11 @@ CLEAN_FILES += $(NODEUNIT) ./node_modules/nodeunit
 .PHONY: test
 test: $(NODEUNIT)
 	$(NODEUNIT) --reporter=tap test/unit/*.test.js
+
+docs/rules.restdown: $(NODEUNIT) node_modules/fwrule/docs/rules.md
+	cp docs/header.restdown docs/rules.restdown
+	cat node_modules/fwrule/docs/rules.md >> docs/rules.restdown
+
 
 #
 # Packaging targets
@@ -95,6 +102,7 @@ publish: release
   fi
 	mkdir -p $(BITS_DIR)/fwapi
 	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/fwapi/$(RELEASE_TARBALL)
+
 
 #
 # Includes

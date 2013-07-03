@@ -16,7 +16,7 @@
     "cmdln": "1.1.1",
     "extsprintf": "1.0.2",
     "fast": "0.2.8",
-    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#4029bf0",
+    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#037185a",
     "node-uuid": "1.2.0",
     "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#03e098c",
     "restify": "2.5.1",
