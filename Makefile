@@ -91,6 +91,7 @@ pkg: all $(SMF_MANIFESTS)
 		$(TOP)/sbin \
 		$(TOP)/lib \
 		$(TOP)/node_modules \
+		$(TOP)/sapi_manifests \
 		$(INSTDIR)/
 	cp -P smf/manifests/*.xml $(INSTDIR)/smf/manifests
 	cp -PR $(NODE_INSTALL) $(INSTDIR)/node
