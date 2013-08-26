@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2013, Joyent, Inc. All rights reserved.
  *
- * Unit tests for nic tag endpoints
+ * Unit tests for /rules endpoints
  */
 
 var helpers = require('./helpers');
 var mocks = require('./mocks');
+var os = require('os');
 var util = require('util');
 
 
@@ -28,7 +29,6 @@ var VMS = [ helpers.generateVM(), helpers.generateVM() ];
 
 
 exports.setup = function (t) {
-    mocks._VMS = VMS;
     helpers.createClientAndServer(function (err, res) {
         t.ifError(err, 'server creation');
         t.ok(res, 'client');
@@ -57,31 +57,19 @@ exports['Add rule'] = function (t) {
         }
 
         t.equal(res.statusCode, 202, 'status code');
-        RULES[0].uuid = obj.rule.uuid;
-        RULES[0].version = obj.rule.version;
-        t.deepEqual(obj, {
-            job_uuid: obj.job_uuid,
-            rule: RULES[0]
-        }, 'response');
+        t.ok(obj.uuid, 'rule has uuid');
+        t.ok(obj.version, 'rule has version');
+        RULES[0].uuid = obj.uuid;
+        RULES[0].version = obj.version;
 
-        var wfRes = helpers.wfResults()[obj.job_uuid];
-        t.deepEqual(wfRes, {
-            done: true,
-            last: 'cnapi.poll_tasks',
-            name: 'fw-add'
-        }, 'workflow result');
-
-        var expRules = {};
-        expRules[RULES[0].uuid] = RULES[0];
-
-        // XXX: test with another VM on a different server. Make sure the other
-        // server does *not* get any rules
-
-        t.ok(mocks._SERVERS[VMS[0].server_uuid], 'mock server entry exists');
-        if (mocks._SERVERS[VMS[0].server_uuid]) {
-            t.deepEqual(mocks._SERVERS[VMS[0].server_uuid].rules, expRules,
-                'rules propagated to server');
-        }
+        t.deepEqual(obj, RULES[0], 'response');
+        t.deepEqual(helpers.getMorayUpdates(), [
+            {
+                host: os.hostname(),
+                name: 'fw.add_rule',
+                payload: RULES[0]
+            }
+        ], 'moray updates');
 
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
             t.ifError(err2, 'getRule error');
@@ -111,26 +99,16 @@ exports['Update rule'] = function (t) {
 
         t.equal(res.statusCode, 202, 'status code');
         t.ok(obj.version !== RULES[0].version, 'version updated');
-        RULES[0].version = obj.rule.version;
-        t.deepEqual(obj, {
-            job_uuid: obj.job_uuid,
-            rule: RULES[0]
-        }, 'response');
+        RULES[0].version = obj.version;
 
-        var wfRes = helpers.wfResults()[obj.job_uuid];
-        t.deepEqual(wfRes, {
-            done: true,
-            last: 'cnapi.poll_tasks',
-            name: 'fw-update'
-        }, 'workflow result');
-
-        var expRules = {};
-        expRules[RULES[0].uuid] = RULES[0];
-
-        if (mocks._SERVERS[VMS[0].server_uuid]) {
-            t.deepEqual(mocks._SERVERS[VMS[0].server_uuid].rules, expRules,
-                'rules propagated to server');
-        }
+        t.deepEqual(obj, RULES[0], 'response');
+        t.deepEqual(helpers.getMorayUpdates(), [
+            {
+                host: os.hostname(),
+                name: 'fw.update_rule',
+                payload: RULES[0]
+            }
+        ], 'moray updates');
 
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
             t.ifError(err2, 'getRule error');
@@ -152,20 +130,15 @@ exports['Delete rule'] = function (t) {
             return t.done();
         }
 
-        t.equal(res.statusCode, 200, 'status code');
-        t.ok(obj.job_uuid, 'job_uuid');
+        t.equal(res.statusCode, 204, 'status code');
 
-        var wfRes = helpers.wfResults()[obj.job_uuid];
-        t.deepEqual(wfRes, {
-            done: true,
-            last: 'ufds.del_rule',
-            name: 'fw-del'
-        }, 'workflow result');
-
-        if (mocks._SERVERS[VMS[0].server_uuid]) {
-            t.deepEqual(mocks._SERVERS[VMS[0].server_uuid].rules, {},
-                'rule deleted from server');
-        }
+        t.deepEqual(helpers.getMorayUpdates(), [
+            {
+                host: os.hostname(),
+                name: 'fw.del_rule',
+                payload: RULES[0]
+            }
+        ], 'moray updates');
 
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
             t.ok(err2, 'getRule error');

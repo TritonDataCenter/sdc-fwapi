@@ -5,6 +5,7 @@
  */
 
 var EventEmitter = require('events').EventEmitter;
+var mockMoray = require('../lib/mock-moray');
 var mod_uuid = require('node-uuid');
 var util = require('util');
 var VError = require('verror').VError;
@@ -16,166 +17,7 @@ var VError = require('verror').VError;
 
 
 var LOG;
-var VMAPI_VMS = [];
 var UFDS_RULES = {};
-var CNAPI_SERVERS = {};
-var TASKS = {};
-
-
-
-// --- Internal helpers
-
-
-/**
- * Returns a CNAPI-style provisioner task response
- */
-function taskResponse() {
-    var taskID = mod_uuid.v4();
-    TASKS[taskID] = { status: 'complete' };
-    return { id: taskID };
-}
-
-
-
-// --- sdc-clients: CNAPI
-
-
-
-function fakeCNAPIclient() {
-
-}
-
-
-fakeCNAPIclient.prototype.getTask = function (id, callback) {
-    if (!TASKS.hasOwnProperty(id)) {
-        return callback(new Error('Unkown task ID: ' + id));
-    }
-
-    return callback(null, TASKS[id]);
-};
-
-
-fakeCNAPIclient.prototype.listServers = function (params, callback) {
-    var servers = [];
-    for (var s in CNAPI_SERVERS) {
-        var server = CNAPI_SERVERS[s];
-        var obj = { uuid: s };
-        if (server.hasOwnProperty('sysinfo')) {
-            obj.sysinfo = server.sysinfo;
-        }
-        servers.push(obj);
-    }
-
-    return callback(null, servers);
-};
-
-
-fakeCNAPIclient.prototype.post = function (endpoint, params, callback) {
-    var method;
-    var routes = [
-        [ new RegExp('/servers/([^/]+)/fw/add'), this._handleFwAdd],
-        [ new RegExp('/servers/([^/]+)/fw/update'), this._handleFwUpdate],
-        [ new RegExp('/servers/([^/]+)/fw/del'), this._handleFwDel]
-    ];
-    var serverUUID;
-
-    for (var r in routes) {
-        var match = endpoint.match(routes[r][0]);
-        if (match) {
-            serverUUID = match[1];
-            method = routes[r][1];
-        }
-    }
-
-    if (!method) {
-        return callback(new Error('Unknown endpoint: ' + endpoint));
-    }
-
-    if (!CNAPI_SERVERS.hasOwnProperty(serverUUID)) {
-        CNAPI_SERVERS[serverUUID] = {};
-    }
-
-    LOG.debug(params, '%s: server "%s": "%s"', endpoint, serverUUID);
-
-    return method(serverUUID, params, callback);
-};
-
-
-fakeCNAPIclient.prototype._handleFwAdd =
-    function (serverUUID, params, callback) {
-    var server = CNAPI_SERVERS[serverUUID];
-    if (!server.hasOwnProperty('rules')) {
-        server.rules = {};
-    }
-
-    // XXX: not strictly true
-    if (!params.hasOwnProperty('rules')) {
-        return callback(new Error('/fw/add payload did not have rules'));
-    }
-
-    params.rules.forEach(function (rule) {
-        server.rules[rule.uuid] = rule;
-    });
-
-    return callback(null, taskResponse());
-};
-
-
-fakeCNAPIclient.prototype._handleFwDel =
-    function (serverUUID, params, callback) {
-    var server = CNAPI_SERVERS[serverUUID];
-
-    // XXX: the real provisioner task doesn't return an error if there are
-    // no rules
-    if (!server.hasOwnProperty('rules')) {
-        return callback(
-            new VError('/fw/del: server "%s" does not have any rules',
-                serverUUID));
-    }
-
-    if (!params.hasOwnProperty('uuids')) {
-        return callback(new Error('/fw/del payload did not have uuids'));
-    }
-
-    var notFound = [];
-    params.uuids.forEach(function (uuid) {
-        if (!server.rules.hasOwnProperty(uuid)) {
-            notFound.push(uuid);
-        }
-        delete server.rules[uuid];
-    });
-
-    // XXX: same as above - the real provisioner task doesn't return an error if
-    // these rules don't exist. This is for testing only.
-    if (notFound.length !== 0) {
-        return callback(
-            new VError('/fw/del: server "%s" does not have rules: %s',
-                serverUUID, notFound));
-    }
-
-    return callback(null, taskResponse());
-};
-
-
-fakeCNAPIclient.prototype._handleFwUpdate =
-    function (serverUUID, params, callback) {
-    var server = CNAPI_SERVERS[serverUUID];
-    if (!server.hasOwnProperty('rules')) {
-        return callback(
-            new VError('/fw/update: server "%s" does not have any rules',
-                serverUUID));
-    }
-
-    if (!params.hasOwnProperty('rules')) {
-        return callback(new Error('/fw/update payload did not have rules'));
-    }
-
-    params.rules.forEach(function (rule) {
-        server.rules[rule.uuid] = rule;
-    });
-
-    return callback(null, taskResponse());
-};
 
 
 
@@ -258,23 +100,19 @@ fakeUFDSclient.prototype.search = function (dn, opts, callback) {
 // --- sdc-clients: VMAPI
 
 
+
 function fakeVMAPIclient() {
 
 }
 
 
 
-fakeVMAPIclient.prototype.listVms = function (params, callback) {
-    // XXX: filter here!
-    return callback(null, VMAPI_VMS);
-};
-
-
-
 module.exports = {
     // -- mocks
+
+    moray: mockMoray,
+
     'sdc-clients': {
-        CNAPI: fakeCNAPIclient,
         UFDS: fakeUFDSclient,
         VMAPI: fakeVMAPIclient
     },
@@ -283,16 +121,8 @@ module.exports = {
     set _LOGGER(val) {
         LOG = val;
     },
-    get _SERVERS() {
-        return CNAPI_SERVERS;
-    },
-    set _SERVERS(val) {
-        CNAPI_SERVERS = val;
-    },
-    get _VMS() {
-        return VMAPI_VMS;
-    },
-    set _VMS(val) {
-        VMAPI_VMS = val;
+
+    get _BUCKETS() {
+        return mockMoray._buckets;
     }
 };

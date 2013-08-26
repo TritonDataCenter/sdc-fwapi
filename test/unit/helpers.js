@@ -6,19 +6,15 @@
 
 var assert = require('assert-plus');
 var async = require('async');
-var app = require('../../lib/app');
+var app;
 var clone = require('clone');
 var fwapiClient = require('sdc-clients/lib/fwapi');
-var fw_shared;
 var mockery = require('mockery');
 var mocks = require('./mocks');
 var mod_uuid = require('node-uuid');
 var restify = require('restify');
 var util = require('util');
 var verror = require('verror');
-var wf_add;
-var wf_del;
-var wf_update;
 
 
 // --- Globals
@@ -32,78 +28,6 @@ var LOG = process.env.LOG || false;
 var OWNER_UUID = mod_uuid.v4();
 var SERVER;
 var SERVER_UUID = mod_uuid.v4();
-
-
-
-// --- Internal helpers
-
-
-
-// --- Fake WFAPI object
-
-
-function FakeWFAPI(params) {
-    this.log = params.log;
-    this.results = {};
-}
-
-
-FakeWFAPI.prototype.createJob = function _createJob(name, params, callback) {
-    var self = this;
-    var wf;
-    var uuid = mod_uuid.v4();
-
-    switch (name) {
-    case 'fw-add':
-        wf = wf_add;
-        break;
-    case 'fw-del':
-        wf = wf_del;
-        break;
-    case 'fw-update':
-        wf = wf_update;
-        break;
-    default:
-        return callback(
-            new verror.VError('FakeWFAPI: unknown workflow "%s"', name));
-        /* jsl:ignore */
-        break;
-        /* jsl:end */
-    }
-
-    var chainDone = 0;
-    var lastTask = '';
-    var job = {
-        log: self.log,
-        params : clone(params)
-    };
-
-    self.log.debug('workflow %s: begin', name);
-    async.forEachSeries(wf.chain, function (task, cb) {
-        lastTask = task.name;
-
-        self.log.debug('workflow %s/%s: start', name, task.name);
-        return task.body(job, function (err, res) {
-            chainDone++;
-            cb(err, res);
-        });
-    }, function (err) {
-        var res = {
-            done: (chainDone == wf.chain.length),
-            last: lastTask,
-            name: name
-        };
-
-        if (err) {
-            res.err = err;
-        }
-
-        self.results[uuid] = res;
-        self.log.debug('workflow %s: end', name);
-
-        return callback(null, { uuid: uuid });
-    });
-};
 
 
 
@@ -131,40 +55,36 @@ function createClientAndServer(callback) {
             debug: function () { return false; },
             error: function () { return false; },
             info: function () { return false; },
+            level: function () { return (process.env.LOG_LEVEL || 'warn'); },
             trace: function () { return false; },
             warn: function () { return false; }
         };
     }
 
     setupMocks();
+    app = require('../../lib/app');
     var server = app.create({
         config: {
             datacenter: 'coal',
+            fast: {
+                port: 2020
+            },
+            moray: {
+                host: 'unused',
+                port: 2020
+            },
+            pollInterval: 3000,
             port: 0,
-            ufds: { },
-            wfapi: { }
+            ufds: { }
         },
         log: log
     });
     mocks._LOGGER = log;
 
+    // XXX: remove this
     server.ufds = new mocks['sdc-clients'].UFDS;
-    server.wfapi = new FakeWFAPI({ log: log });
     // XXX: replace with a real mock
     server.vmapi = {};
-
-    [wf_add, wf_update, wf_del].forEach(function (wf) {
-        wf._set({
-            cnapiUrl: 'http://unused',
-            ufdsDn: 'ou=fwrulesMock',
-            ufdsPassword: 'password',
-            ufdsUrl: 'http://unused'
-        });
-    });
-    fw_shared._set({
-        fwapiUrl: 'http://unused',
-        vmapiUrl: 'http://unused'
-    });
 
     server.listen(function () {
         SERVER = server;
@@ -198,17 +118,24 @@ function generateVM(override) {
         }
     }
 
-    if (!mocks._SERVERS.hasOwnProperty(vm.server_uuid)) {
-        mocks._SERVERS[vm.server_uuid] = {};
-    }
-
-    if (!mocks._SERVERS[vm.server_uuid].hasOwnProperty('sysinfo')) {
-        mocks._SERVERS[vm.server_uuid].sysinfo = {
-            'SDC Version': '7.0'
-        };
-    }
-
     return vm;
+}
+
+
+/**
+ * Gets update records from the fwapi_updates moray bucket (and deletes them
+ * after, since we don't care about actually applying them)
+ */
+function getMorayUpdates() {
+    var buckets = mocks._BUCKETS;
+    var updates = [];
+
+    for (var k in buckets.fwapi_updates) {
+        updates.push(buckets.fwapi_updates[k]);
+        delete buckets.fwapi_updates[k];
+    }
+
+    return updates;
 }
 
 
@@ -219,11 +146,6 @@ function setupMocks() {
             mockery.registerMock(m, mocks[m]);
         }
     }
-
-    wf_add = require('../../lib/workflows/fw-add');
-    wf_del = require('../../lib/workflows/fw-del');
-    wf_update = require('../../lib/workflows/fw-update');
-    fw_shared = require('wf-shared').fwapi;
 }
 
 
@@ -247,21 +169,11 @@ function uuidSort(a, b) {
 }
 
 
-/**
- * Returns the workflow results
- */
-function wfResults() {
-    assert.object(SERVER);
-
-    return SERVER.wfapi.results;
-}
-
-
 
 module.exports = {
     createClientAndServer: createClientAndServer,
     generateVM: generateVM,
+    getMorayUpdates: getMorayUpdates,
     stopServer: stopServer,
-    uuidSort: uuidSort,
-    wfResults: wfResults
+    uuidSort: uuidSort
 };

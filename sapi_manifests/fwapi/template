@@ -1,6 +1,15 @@
 {
   "port": 80,
   "datacenter": "{{{datacenter_name}}}",
+  "fast": {
+    "port": 2020
+  },
+  "moray": {
+    "host": "{{{MORAY_SERVICE}}}",
+    "logLevel": "info",
+    "port": 2020
+  },
+  "pollInterval": 3000,
   "ufds": {
     "url": "ldaps://{{{UFDS_SERVICE}}}",
     "bindDN": "{{{ufds_ldap_root_dn}}}",
@@ -16,8 +25,5 @@
     "retry": {
       "retries": 2
     }
-  },
-  "wfapi": {
-    "url": "http://{{{WORKFLOW_SERVICE}}}"
   }
 }
