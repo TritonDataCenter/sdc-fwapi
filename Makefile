@@ -15,7 +15,7 @@ NODEUNIT		:= ./node_modules/.bin/nodeunit
 # Files
 #
 DOC_FILES	 = index.restdown rules.restdown
-JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js') bin/wait-for-job
+JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
@@ -37,8 +37,8 @@ ifeq ($(shell uname -s),SunOS)
 	# Use an 'sdcnode' build on SmartOS.
 	include ./tools/mk/Makefile.node_prebuilt.defs
 else
-	# Build a node locally on non-SmartOS (e.g. Mac).
-	include ./tools/mk/Makefile.node.defs
+	NPM_EXEC :=
+	NPM = npm
 endif
 include ./tools/mk/Makefile.smf.defs
 
@@ -62,6 +62,14 @@ $(NODEUNIT): | $(NPM_EXEC)
 .PHONY: test
 test: $(NODEUNIT)
 	$(NODEUNIT) --reporter=tap test/unit/*.test.js
+
+.PHONY: teststop
+teststop:
+	@(for F in test/unit/*.test.js; do \
+		echo "# $$F" ;\
+		$(NODEUNIT) --reporter tap $$F ;\
+		[[ $$? == "0" ]] || exit 1; \
+	done)
 
 node_modules/fwrule/docs/rules.md: | $(NPM_EXEC)
 	$(NPM) install fwrule
