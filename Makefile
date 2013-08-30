@@ -53,7 +53,7 @@ INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 # Repo-specific targets
 #
 .PHONY: all
-all: $(SMF_MANIFESTS) | $(NODEUNIT) $(REPO_DEPS)
+all: $(SMF_MANIFESTS) | $(NODEUNIT) $(REPO_DEPS) sdc-scripts
 	$(NPM) rebuild
 
 $(NODEUNIT): | $(NPM_EXEC)
@@ -103,6 +103,9 @@ pkg: all $(SMF_MANIFESTS)
 		$(INSTDIR)/
 	cp -P smf/manifests/*.xml $(INSTDIR)/smf/manifests
 	cp -PR $(NODE_INSTALL) $(INSTDIR)/node
+	mkdir -p $(PKGDIR)/root/opt/smartdc/sdc-boot/scripts
+	cp $(TOP)/sdc-boot/*.sh $(PKGDIR)/root/opt/smartdc/sdc-boot/
+	cp $(TOP)/deps/sdc-scripts/*.sh $(PKGDIR)/root/opt/smartdc/sdc-boot/scripts/
 	# Clean up some dev / build bits
 	find $(INSTDIR) -name "*.pyc" | xargs rm -f
 	find $(INSTDIR) -name "*.o" | xargs rm -f
