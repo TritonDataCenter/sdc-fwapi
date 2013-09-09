@@ -103,9 +103,9 @@ pkg: all $(SMF_MANIFESTS)
 		$(INSTDIR)/
 	cp -P smf/manifests/*.xml $(INSTDIR)/smf/manifests
 	cp -PR $(NODE_INSTALL) $(INSTDIR)/node
-	mkdir -p $(PKGDIR)/root/opt/smartdc/sdc-boot
-	cp -R $(TOP)/deps/sdc-scripts/* $(PKGDIR)/root/opt/smartdc/sdc-boot/
-	cp -R $(TOP)/sdc-boot/* $(PKGDIR)/root/opt/smartdc/sdc-boot/
+	mkdir -p $(PKGDIR)/root/opt/smartdc/boot
+	cp -R $(TOP)/deps/sdc-scripts/* $(PKGDIR)/root/opt/smartdc/boot/
+	cp -R $(TOP)/boot/* $(PKGDIR)/root/opt/smartdc/boot/
 	# Clean up some dev / build bits
 	find $(INSTDIR) -name "*.pyc" | xargs rm -f
 	find $(INSTDIR) -name "*.o" | xargs rm -f
