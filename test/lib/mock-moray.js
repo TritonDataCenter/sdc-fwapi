@@ -5,6 +5,7 @@
  */
 
 var assert = require('assert-plus');
+var clone = require('clone');
 var EventEmitter = require('events').EventEmitter;
 var ldapjs = require('ldapjs');
 var util = require('util');
@@ -77,15 +78,25 @@ util.inherits(FakeMoray, EventEmitter);
 
 
 FakeMoray.prototype._put = function _store(bucket, key, val) {
-    var newVal = {};
-    for (var k in val) {
-        if (typeof (val[k]) === 'object') {
-            newVal[k] = val[k];
-        } else {
-            newVal[k] = val[k].toString();
-        }
+    BUCKETS[bucket][key] = clone(val);
+};
+
+
+FakeMoray.prototype._del = function _del(bucket, key) {
+    var err = getNextMorayError('delObject');
+    if (err) {
+        throw err;
     }
-    BUCKETS[bucket][key] = newVal;
+
+    if (!BUCKETS.hasOwnProperty(bucket)) {
+        throw bucketNotFoundErr(bucket);
+    }
+
+    if (!BUCKETS[bucket].hasOwnProperty(key)) {
+        throw objectNotFoundErr(key);
+    }
+
+    delete BUCKETS[bucket][key];
 };
 
 
@@ -102,14 +113,22 @@ FakeMoray.prototype.batch = function batch(data, callback) {
         assert.string(item.bucket, 'item.bucket');
         assert.string(item.key, 'item.key');
         assert.string(item.operation, 'item.operation');
-        assert.object(item.value, 'item.value');
 
         if (item.operation === 'put') {
+            assert.object(item.value, 'item.value');
             if (!BUCKETS.hasOwnProperty(item.bucket)) {
                 return callback(bucketNotFoundErr(item.bucket));
             }
 
             this._put(item.bucket, item.key, item.value);
+        }
+
+        if (item.operation === 'delete') {
+            try {
+                this._del(item.bucket, item.key);
+            } catch (err2) {
+                return callback(err2);
+            }
         }
     }
 
@@ -146,21 +165,12 @@ FakeMoray.prototype.delBucket = function delBucket(bucket, callback) {
 
 
 FakeMoray.prototype.delObject = function delObject(bucket, key, callback) {
-    var err = getNextMorayError('delObject');
-    if (err) {
+    try {
+        this._del(bucket, key);
+        return callback();
+    } catch (err) {
         return callback(err);
     }
-
-    if (!BUCKETS.hasOwnProperty(bucket)) {
-        return callback(bucketNotFoundErr(bucket));
-    }
-
-    if (!BUCKETS[bucket].hasOwnProperty(key)) {
-        return callback(objectNotFoundErr(key));
-    }
-
-    delete BUCKETS[bucket][key];
-    return callback();
 };
 
 
@@ -181,8 +191,16 @@ FakeMoray.prototype.findObjects = function findObjects(bucket, filter, opts) {
         }
 
         for (var r in BUCKETS[bucket]) {
-            if (filterObj.matches(BUCKETS[bucket][r])) {
-                res.emit('record', { value: BUCKETS[bucket][r] });
+            // The LDAP matching function .matches() assumes that the
+            // values are strings, so stringify properties so that matches
+            // work correctly
+            var obj = {};
+            for (var k in BUCKETS[bucket][r]) {
+                obj[k] = BUCKETS[bucket][r][k].toString();
+            }
+
+            if (filterObj.matches(obj)) {
+                res.emit('record', { value: clone(BUCKETS[bucket][r]) });
             }
         }
 
@@ -223,7 +241,7 @@ FakeMoray.prototype.getObject = function getObject(bucket, key, callback) {
         return callback(objectNotFoundErr(key));
     }
 
-    return callback(null, { value: BUCKETS[bucket][key] });
+    return callback(null, { value: clone(BUCKETS[bucket][key]) });
 };
 
 
@@ -322,5 +340,9 @@ module.exports = {
     get _buckets() {
         return BUCKETS;
     },
+    set _errors(obj) {
+        MORAY_ERRORS = obj;
+    },
+    FakeMoray: FakeMoray,
     createClient: createClient
 };
