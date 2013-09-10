@@ -1,4 +1,5 @@
 {
+  "logLevel": "{{{FWAPI_LOG_LEVEL}}}",
   "port": 80,
   "datacenter": "{{{datacenter_name}}}",
   "fast": {

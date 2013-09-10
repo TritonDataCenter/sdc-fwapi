@@ -47,13 +47,13 @@ function main() {
     var server;
     var log = bunyan.createLogger({
         name: 'fwapi',
-        level: 'debug',
+        level: 'info',
         serializers: restify.bunyan.serializers
     });
 
     log.info('Loading config file: %s', CONFIG_FILE);
     var config = loadConfig(CONFIG_FILE);
-    if (config.hasOwnProperty('logLevel')) {
+    if (config.logLevel) {
         log.level(config.logLevel);
     }
 
