@@ -18,7 +18,7 @@
     "extsprintf": "1.0.2",
     "fast": "git://github.com/mcavage/node-fast.git#633548a",
     "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#7c47274",
-    "moray": "git+ssh://git@git.joyent.com:node-moray.git#f580ba3",
+    "moray": "git+ssh://git@git.joyent.com:node-moray.git#f0f072",
     "node-uuid": "1.2.0",
     "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#055b178",
     "restify": "2.5.1",
