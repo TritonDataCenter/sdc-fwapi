@@ -26,9 +26,8 @@ SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 NODE_PREBUILT_VERSION=v0.8.23
 ifeq ($(shell uname -s),SunOS)
 	NODE_PREBUILT_TAG=zone
-	# Allow building on a smartos with a GCC version other than the
-	# sdcnode GCC build boxes.
-	NODE_PREBUILT_CC_VERSION=4.6.2
+	# Allow building on a SmartOS image other than smartos-1.6.3.
+    NODE_PREBUILT_IMAGE=01b2c898-945f-11e1-a523-af1afbe22822
 endif
 
 include ./tools/mk/Makefile.defs
