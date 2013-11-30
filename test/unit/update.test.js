@@ -67,7 +67,7 @@ exports['Add rule'] = function (t) {
             {
                 host: os.hostname(),
                 name: 'fw.add_rule',
-                payload: RULES[0]
+                value: RULES[0]
             }
         ], 'moray updates');
 
@@ -106,7 +106,7 @@ exports['Update rule'] = function (t) {
             {
                 host: os.hostname(),
                 name: 'fw.update_rule',
-                payload: RULES[0]
+                value: RULES[0]
             }
         ], 'moray updates');
 
@@ -136,7 +136,7 @@ exports['Delete rule'] = function (t) {
             {
                 host: os.hostname(),
                 name: 'fw.del_rule',
-                payload: RULES[0]
+                value: RULES[0]
             }
         ], 'moray updates');
 

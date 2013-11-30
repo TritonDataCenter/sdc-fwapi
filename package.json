@@ -1,7 +1,7 @@
 {
   "name": "fwapi",
   "description": "Firewall API for Smart DataCenter",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "Joyent",
   "private": true,
   "devDependencies": {
@@ -12,16 +12,16 @@
   "dependencies": {
     "assert-plus": "0.1",
     "async": "0.1",
-    "bunyan": "0.21.3",
+    "bunyan": "0.22.1",
     "clone": "0.1",
     "cmdln": "1.1.1",
     "extsprintf": "1.0.2",
-    "fast": "git://github.com/mcavage/node-fast.git#633548a",
+    "fast-stream": "git+ssh://git@git.joyent.com:fast-stream.git#0323245",
     "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#7c47274",
-    "moray": "git+ssh://git@git.joyent.com:node-moray.git#f0f072",
+    "moray": "git+ssh://git@git.joyent.com:node-moray.git#324ef39",
     "node-uuid": "1.2.0",
     "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#055b178",
-    "restify": "2.5.1",
+    "restify": "git+ssh://git@github.com:mcavage/node-restify.git#0d7b4ba",
     "vasync": "1.3",
     "verror": "1.3"
   },
