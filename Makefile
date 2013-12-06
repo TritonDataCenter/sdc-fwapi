@@ -23,6 +23,7 @@ JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 
 
+include ./tools/mk/Makefile.defs
 ifeq ($(shell uname -s),SunOS)
 	NODE_PREBUILT_VERSION=v0.10.21
 	NODE_PREBUILT_TAG=zone
