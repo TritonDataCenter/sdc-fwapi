@@ -109,7 +109,7 @@ Returns the VMs affected by a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule (optional)||
+||owner_uuid||UUID||Owner UUID to filter VMs by||
 
 ### Example: get the UUIDs of VMs affected by a rule
 
@@ -196,3 +196,7 @@ Returns the rules that apply to a VM.
 
   * Added /rules/:uuid/vms endpoint
   * Added /firewalls/vms/:uuid endpoint
+
+## 2013-12-12
+
+  * /rules/:uuid/vms: owner_uuid is no longer optional
