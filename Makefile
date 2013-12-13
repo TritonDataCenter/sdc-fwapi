@@ -95,6 +95,11 @@ pkg: all $(SMF_MANIFESTS)
 		$(TOP)/node_modules \
 		$(TOP)/sapi_manifests \
 		$(INSTDIR)/
+	@mkdir $(INSTDIR)/test
+	cp -r $(TOP)/test/integration \
+		$(TOP)/test/lib \
+		$(TOP)/test/runtest \
+		$(INSTDIR)/test/
 	cp -P smf/manifests/*.xml $(INSTDIR)/smf/manifests
 	cp -PR $(NODE_INSTALL) $(INSTDIR)/node
 	mkdir -p $(PKGDIR)/root/opt/smartdc/boot
