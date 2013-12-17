@@ -4,16 +4,17 @@ markdown2extras: wiki-tables, cuddled-lists
 apisections:
 ---
 
-# Architecture
+# Firewall API Architecture and Troubleshooting
 
-This is an overview of the Firewall API architecture.
-
-
-
-## Components
+This document is intended to give an overview of the Firewall API
+architecture: its various pieces, and how to interact and troubleshoot
+them.
 
 
-These are the basic components related to FWAPI in SDC:
+
+# Components
+
+These are the components that propagate changes to firewalls in SDC:
 
 
                         +------------+
@@ -26,7 +27,7 @@ These are the basic components related to FWAPI in SDC:
           v                    v
     +-----------+         +---------+       +---------+
     |           |         |         |       |         |
-    |   vmapi   +-------->|  wfapi  +------>|  FWAPI  |
+    |   VMAPI   +-------->|  WFAPI  +------>|  FWAPI  |
     |           |         |         |       |         |
     +-----------+         +---------+       +----+----+
                                                  |
@@ -35,19 +36,22 @@ These are the basic components related to FWAPI in SDC:
                                v                 v             v      v
                      +--------------+     +--------------+
                      |              |     |              |
-                     |  firewaller  |     |  firewaller  |       ...
-                     |     CN1      |     |     CN2      |
+                     |  firewaller  |     |  firewaller  |    firewallers
+                     |     CN1      |     |     CN2      |        ...
                      |              |     |              |
                      +--------------+     +--------------+
 
 
-On the CN:
+## On the CN
 
 * rules are managed using the **fwadm** tool
 * fwadm converts high-level FWAPI rules into an ipf ruleset for each zone
 * rules and remote VMs get stored in **/var/fw/**
 * ipf policies are stored in /zones/:uuid/config/ipf.conf
 * logs from each fwadm action are stored in **/var/log/fw/logs**
+
+
+## Interaction with ipfilter
 
 fwadm controls its own ipf instance, which **is separate from the one
 visible in the zone**.  The zone can't see or modify the GZ-controlled ipf
@@ -63,6 +67,9 @@ rules.  When filtering, the rulesets are evaluated like so:
 
 
 ## Add / Update / Delete rule workflow
+
+Modifying a firewall rule goes to the Firewall API directly, which pushes
+the change to the firewaller agents on the Compute Nodes:
 
 
         +----------+
@@ -86,6 +93,10 @@ rules.  When filtering, the rulesets are evaluated like so:
 
 
 ## Provision / Update / Destroy VM workflow
+
+Modifying any of the VM parameters that can affect firewalls (tags and
+nics) causes an update to be posted to FWAPI (in the fwapi.update workflow
+task), which is then pushed to the firewaller agents on the Compute Nodes:
 
 
         +----------+

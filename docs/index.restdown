@@ -51,9 +51,12 @@ Important things to remember:
 * Rules are not necessarily per instance.
 * Rather, one rule can affect many VMs through the **tags** or **all vms**
   targets.
-* There are global rules in FWAPI - these are set by the administrator, and
-  will apply to all VMs in the datacenter.  There is currently only one of
-  these enabled by default, which allows pings from any host.
+* All user rules are tied to that users' owner_uuid, which restricts the
+  rules to VMs that they own.
+* The exception is global rules - these are set by the administrator, and
+  will apply to all VMs in the datacenter (not just for a particular owner).
+  There is currently only one of these enabled by default, which allows
+  pings from any host.
 * Rules can be individually enabled or disabled.
 
 In the case of two rules that affect the same VM and port, the rule that
@@ -89,19 +92,21 @@ firewall behaviour:
 
 To implement this in FWAPI, you would first add three rules:
 
-"Anyone on the internet can speak HTTP and HTTPS to the webservers":
+**"Anyone on the internet can speak HTTP and HTTPS to the webservers":**
 
     FROM any TO tag www ALLOW tcp port (80 and 443)
 
 
-"Webservers *only* can speak to the database servers on the database port"
+**"Webservers *only* can speak to the database servers on the database port":**
 
     FROM tag www TO tag db ALLOW tcp port 5432
 
 
-"Webservers and database servers can SSH to each other"
+**"Webservers and database servers can SSH to each other":**
 
     FROM all vms to all vms ALLOW tcp port 22
+
+"all vms" here means "all VM instances that are owned by that user"
 
 
 There are two more steps necessary:
