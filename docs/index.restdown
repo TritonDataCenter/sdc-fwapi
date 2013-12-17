@@ -29,6 +29,9 @@ The FWAPI design principles are:
 * Updates should happen as instantaneously as possible, and should not
   require rebooting of the VM.
 
+For more information about the implementation and various pieces of the
+firewalling system, consult the
+[architecture and troubleshooting guide](architecture.html).
 
 ## Default Policy
 
@@ -52,6 +55,14 @@ Important things to remember:
   will apply to all VMs in the datacenter.  There is currently only one of
   these enabled by default, which allows pings from any host.
 * Rules can be individually enabled or disabled.
+
+In the case of two rules that affect the same VM and port, the rule that
+goes counter to the default policy takes precedence.  This means:
+
+* If you have an incoming BLOCK and an incoming ALLOW rule for the
+  same VM and port, the ALLOW will override.
+* If you have an outgoing BLOCK and an outgoing ALLOW rule for the
+  same VM and port, the BLOCK will override.
 
 
 ## VMs
