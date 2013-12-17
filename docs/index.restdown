@@ -6,20 +6,108 @@ apisections: Rules, Firewalls
 
 # FWAPI (Firewall API)
 
-This is the reference documentation for FWAPI, the firewall API for
+This is the reference documentation for FWAPI, the Firewall API for
 SmartDataCenter (SDC).
 
 
 
 # Overview
 
-An overview should probably go here.
+## Design principles
+
+The FWAPI design principles are:
+
+* It should be easy to manage rules for large numbers of machines easily -
+  you should never have to manage the same rule for a number of machines.
+* Managing these rules should be made easier using the VM's metadata
+  (eg: tags)
+* The firewall should live outside of the VM: it should be as if the VM is
+  connected to its own physical firewall sitting between it and the rest of
+  the world.
+* Updating firewall rules should happen out of band - it should be
+  impossible to lock out whatever's doing the updating.
+* Updates should happen as instantaneously as possible, and should not
+  require rebooting of the VM.
+
+
+## Default Policy
+
+The default policy for a VM with its firewall enabled is:
+
+* block all inbound traffic
+* allow all outbound traffic
+
+This default policy cannot be changed - you must add rules that get applied
+in addition to these defaults.
+
+
+## Rules
+
+Important things to remember:
+
+* Rules are not necessarily per instance.
+* Rather, one rule can affect many VMs through the **tags** or **all vms**
+  targets.
+* There are global rules in FWAPI - these are set by the administrator, and
+  will apply to all VMs in the datacenter.  There is currently only one of
+  these enabled by default, which allows pings from any host.
+* Rules can be individually enabled or disabled.
+
+
+## VMs
+
+Important things to remember:
+
+* Firewall rules only affect a VM if it has the **firewall_enabled**
+  property set to **true**.
+* Updating tags on the VMs will affect what rules are applied to the VM.
+* **FWAPI firewall rules only work with SmartOS VMs.**  KVM VMs are **not**
+  supported yet.
+
+
+## An Example
+
+Say you are running a website - you have a number of web servers that make
+connections to a number of database servers.  You want the following
+firewall behaviour:
+
+* Anyone on the internet can speak HTTP and HTTPS to the webservers
+* Webservers *only* can speak to the database servers on the database port
+* Webservers and database servers can SSH to each other
+
+
+To implement this in FWAPI, you would first add three rules:
+
+"Anyone on the internet can speak HTTP and HTTPS to the webservers":
+
+    FROM any TO tag www ALLOW tcp port (80 and 443)
+
+
+"Webservers *only* can speak to the database servers on the database port"
+
+    FROM tag www TO tag db ALLOW tcp port 5432
+
+
+"Webservers and database servers can SSH to each other"
+
+    FROM all vms to all vms ALLOW tcp port 22
+
+
+There are two more steps necessary:
+
+* Updating all webserver VMs with tag **www**
+* Updating all database VMs with tag **db**
 
 
 # Rule Syntax
 
-Rules are written in a DSL - see the [rule syntax guide](rules.html) for a
-reference.
+Rules are written in a Doman Specific Language (DSL). References for it are:
+
+* The [rule syntax guide](rules.html) has the complete syntax.
+* The [railroad diagram](railroad-diagram.xhtml) has an easier to read
+  format.
+* The [cloudapi firewall rules documentation](http://wiki.joyent.com/wiki/display/jpc2/Firewall+Rules)
+  is probably much clearer.
 
 
 # Rules
@@ -191,7 +279,7 @@ Deletes a rule.
 These endpoints display the firewall rules that apply to VMs.
 
 
-## GET /firewalls/vms/:uuid/vms
+## GET /firewalls/vms/:uuid
 
 Returns the rules that apply to a VM.
 
