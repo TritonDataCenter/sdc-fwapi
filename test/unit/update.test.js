@@ -46,6 +46,7 @@ exports.setup = function (t) {
 exports['Add rule'] = function (t) {
     RULES.push({
         enabled: true,
+        owner_uuid: VMS[0].owner_uuid,
         rule: util.format('FROM vm %s TO vm %s ALLOW tcp PORT 80',
             VMS[0].uuid, VMS[1].uuid)
     });

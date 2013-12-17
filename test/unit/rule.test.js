@@ -47,7 +47,8 @@ exports['all target types'] = function (t) {
             + util.format('TO (ip %s OR subnet %s OR tag %s OR vm %s)',
             ips[1], subnets[1], tags[1], vms[1])
             + ' ALLOW tcp (PORT 80 AND PORT 81)',
-        enabled: true
+        enabled: true,
+        global: true
     };
 
     var rule = mod_rule.create(inRule);
@@ -134,11 +135,13 @@ exports['owner_uuid'] = function (t) {
 
 
 exports['multiple tags with multiple quoted values'] = function (t) {
+    var owner = mod_uuid.v4();
     var rule = mod_rule.create({
         rule: 'FROM (tag "김치" = "백김치" OR '
             + 'tag "김치" = "白김치") TO '
             + '(tag "some tag" = value OR '
-            + 'tag some-tag = "another value") ALLOW tcp PORT 80'
+            + 'tag some-tag = "another value") ALLOW tcp PORT 80',
+        owner_uuid: owner
     });
 
     var raw = {
@@ -146,6 +149,7 @@ exports['multiple tags with multiple quoted values'] = function (t) {
         objectclass: mod_rule.objectclass,
         ports: [ 80 ],
         action: 'allow',
+        owner: owner,
         protocol: 'tcp',
         fromtag: [ rawTag('김치', '白김치'),
             rawTag('김치', '백김치') ],
@@ -158,6 +162,7 @@ exports['multiple tags with multiple quoted values'] = function (t) {
 
     var serialized = {
         enabled: false,
+        owner_uuid: owner,
         rule: 'FROM (tag "김치" = "白김치" '
             + 'OR tag "김치" = "백김치") TO '
             + '(tag "some tag" = value OR tag some-tag = "another value") '
@@ -184,5 +189,25 @@ exports['multiple tags with multiple quoted values'] = function (t) {
     t.ok(!rule.allVMs, 'rule.allVMs');
     t.deepEqual(rule.tags, ruleTags, 'rule.tags');
 
+    t.done();
+};
+
+
+exports['global'] = function (t) {
+    var caught = false;
+    var rule;
+
+    try {
+        rule = new mod_rule.Rule({
+            rule: 'FROM any TO tag foo=bar BLOCK udp PORT 54',
+            owner_uuid: mod_uuid.v4(),
+            global: true
+        });
+    } catch (pErr) {
+        caught = true;
+    }
+
+    t.ok(caught, 'Error thrown');
+    t.ok(!rule, 'No rule');
     t.done();
 };

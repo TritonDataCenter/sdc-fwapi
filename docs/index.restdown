@@ -49,12 +49,22 @@ match rules with these targets in either the FROM or TO side of the rule.
         -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
 
     [
-      {
-        "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
-        "enabled": "true",
-        "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-        "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
-      }
+        {
+          "description": "allow pings to all VMs",
+          "enabled": true,
+          "global": true,
+          "rule": "FROM any TO all vms ALLOW icmp TYPE 8 CODE 0",
+          "uuid": "27775f65-d377-4979-9c7c-63c9d4f98525",
+          "version": "1386743867795.003240"
+        },
+        {
+          "description": "One new rule",
+          "enabled": true,
+          "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
+          "rule": "FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559",
+          "uuid": "d92dcf67-a74b-4fda-9019-82a5d74af551",
+          "version": "1386898045802.093012"
+        }
     ]
 
 
@@ -67,13 +77,15 @@ Returns a rule.
 
 ### Example: get a rule
 
-    GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
+    GET /rules/d92dcf67-a74b-4fda-9019-82a5d74af551
 
     {
-      "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
-      "enabled": "true",
-      "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
+      "description": "One new rule",
+      "enabled": true,
+      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
+      "rule": "FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559",
+      "uuid": "d92dcf67-a74b-4fda-9019-82a5d74af551",
+      "version": "1386898045802.093012"
     }
 
 
@@ -84,21 +96,26 @@ Modifies a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
+||description||String||Rule description (optional)||
+||enabled||Boolean||Whether or not the rule is enabled (optional, default: false)||
+||global||Boolean||Whether or not the rule is global (optional)||
 ||owner_uuid||UUID||Owner UUID of the rule (optional)||
-||enabled||Boolean||Whether or not the rule is enabled||
-||rule||String||The rule text||
+||rule||String||The firewall rule (see the [rule syntax guide](rules.html)) (optional)||
+
+*Note:* One of global or owner_uuid is required.
 
 ### Example: disable a rule
 
-    GET /rules/42859d04-c0f1-47d1-910e-382ffe07d029
-        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
+    PUT /rules/42859d04-c0f1-47d1-910e-382ffe07d029
         -d enabled=false
 
     {
-      "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
-      "enabled": "false",
-      "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
+      "description": "One new rule",
+      "enabled": false,
+      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
+      "rule": "FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559",
+      "uuid": "d92dcf67-a74b-4fda-9019-82a5d74af551",
+      "version": "1386898045802.093012"
     }
 
 
@@ -125,27 +142,35 @@ Creates a rule.
 ### Inputs
 
 ||**Field**||**Type**||**Description**||
+||description||String||Rule description (optional)||
+||enabled||Boolean||Whether or not the rule is enabled (optional, default: false)||
+||global||Boolean||Whether or not the rule is global (optional)||
 ||owner_uuid||UUID||Owner UUID of the rule (optional)||
-||enabled||Boolean||Whether or not the rule is enabled (optional)||
 ||rule||String||The firewall rule (see the [rule syntax guide](rules.html)) (optional)||
 
-### Example: disable a rule
+*Note:* One of global or owner_uuid is required.
 
-    POST /rules/42859d04-c0f1-47d1-910e-382ffe07d029
+### Example: create a rule
+
+    POST /rules
+        -d description="One new rule"
+        -d enabled=true
         -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
-        -d enabled=false
+        -d rule="FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559"
 
     {
-      "uuid": "42859d04-c0f1-47d1-910e-382ffe07d029",
-      "enabled": "false",
-      "rule": "FROM vm 1e9607ee-611b-49da-8cea-22c44183c97e TO subnet 10.99.99.0/24 ALLOW tcp PORT 80",
-      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853"
+      "description": "One new rule",
+      "enabled": true,
+      "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
+      "rule": "FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559",
+      "uuid": "d92dcf67-a74b-4fda-9019-82a5d74af551",
+      "version": "1386898045802.093012"
     }
 
 
 ## DELETE /rules/:uuid
 
-Modifies a rule.
+Deletes a rule.
 
 ### Inputs
 
@@ -175,17 +200,26 @@ Returns the rules that apply to a VM.
 ||**Field**||**Type**||**Description**||
 ||owner_uuid||UUID||Owner UUID of the rule (optional)||
 
-### Example: get the UUIDs of VMs affected by a rule
+### Example: get the rules that apply to VM 2ca7d243-215f-41d7-a8ed-c83e4712a8bf
 
     GET /firewalls/vms/2ca7d243-215f-41d7-a8ed-c83e4712a8bf
 
     [
-      {
-        "enabled": true,
-        "rule": "FROM ip 10.88.88.2 TO tag tag2 ALLOW tcp PORT 80",
-        "uuid": "fb5ad3b7-9602-43c8-b286-8a7c0627a438",
-        "version": "1362178611215.099554"
-      }
+        {
+          "description": "allow pings to all VMs",
+          "enabled": true,
+          "global": true,
+          "rule": "FROM any TO all vms ALLOW icmp TYPE 8 CODE 0",
+          "uuid": "27775f65-d377-4979-9c7c-63c9d4f98525",
+          "version": "1386743867795.003240"
+        },
+        {
+          "enabled": true,
+          "owner_uuid": "e6fcbc64-3f32-11e2-a144-bf78292e9628",
+          "rule": "FROM ip 10.88.88.2 TO tag tag2 ALLOW tcp PORT 80",
+          "uuid": "fb5ad3b7-9602-43c8-b286-8a7c0627a438",
+          "version": "1362178611215.099554"
+        }
     ]
 
 
@@ -194,9 +228,14 @@ Returns the rules that apply to a VM.
 
 ## 2013-03-01
 
-  * Added /rules/:uuid/vms endpoint
-  * Added /firewalls/vms/:uuid endpoint
+  * Added /rules/:uuid/vms endpoint.
+  * Added /firewalls/vms/:uuid endpoint.
 
 ## 2013-12-12
 
-  * /rules/:uuid/vms: owner_uuid is no longer optional
+  * /rules/:uuid/vms: owner_uuid is no longer optional.
+
+## 2013-12-16
+
+  * POST /rules/:uuid and PUT /rules/:uuid now require the global parameter
+    if owner_uuid is not set.
