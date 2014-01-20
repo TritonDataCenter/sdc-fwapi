@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Joyent, Inc. All rights reserved.
+# Copyright (c) 2014, Joyent, Inc. All rights reserved.
 #
 # FWAPI Makefile
 #
@@ -87,6 +87,7 @@ pkg: all $(SMF_MANIFESTS)
 	@rm -rf $(PKGDIR)
 	@mkdir -p $(PKGDIR)/site
 	@mkdir -p $(INSTDIR)/smf/manifests
+	@mkdir $(INSTDIR)/test
 	@touch $(PKGDIR)/site/.do-not-delete-me
 	cp -r $(TOP)/server.js \
 		$(TOP)/bin \
@@ -95,7 +96,6 @@ pkg: all $(SMF_MANIFESTS)
 		$(TOP)/node_modules \
 		$(TOP)/sapi_manifests \
 		$(INSTDIR)/
-	@mkdir $(INSTDIR)/test
 	cp -r $(TOP)/test/integration \
 		$(TOP)/test/lib \
 		$(TOP)/test/runtest \
@@ -112,9 +112,7 @@ pkg: all $(SMF_MANIFESTS)
 	find $(INSTDIR) -name .wafpickle* | xargs rm -rf   # waf build file
 	find $(INSTDIR) -name .lock-wscript | xargs rm -rf   # waf build file
 	find $(INSTDIR) -name config.log | xargs rm -rf   # waf build file
-	find $(INSTDIR) -name test | xargs rm -rf   # waf build file
-	rm -rf $(INSTDIR)/node_modules/tap	# we don't need to run tests
-	rm -rf $(INSTDIR)/node_modules/jison	# or to regenerate the parser
+	rm -rf $(INSTDIR)/node_modules/jison	# we don't need to regenerate the parser
 
 $(RELEASE_TARBALL): pkg
 	(cd $(PKGDIR) && $(TAR) -jcf $(TOP)/$(RELEASE_TARBALL) root site)
