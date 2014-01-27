@@ -20,7 +20,7 @@
     "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#dd7b6e7",
     "moray": "git+ssh://git@git.joyent.com:node-moray.git#324ef39",
     "node-uuid": "1.2.0",
-    "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#055b178",
+    "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#82a0e12",
     "restify": "git+ssh://git@github.com:mcavage/node-restify.git#0d7b4ba",
     "vasync": "1.3",
     "verror": "1.3"
