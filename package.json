@@ -17,7 +17,7 @@
     "cmdln": "1.1.1",
     "extsprintf": "1.0.2",
     "fast-stream": "git+ssh://git@git.joyent.com:fast-stream.git#2770f8e",
-    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#dd7b6e7",
+    "fwrule": "git+ssh://git@git.joyent.com:fwrule.git#e6da414",
     "moray": "git+ssh://git@git.joyent.com:node-moray.git#324ef39",
     "node-uuid": "1.2.0",
     "sdc-clients": "git+ssh://git@git.joyent.com:node-sdc-clients.git#82a0e12",

@@ -14,7 +14,7 @@ NODEUNIT		:= ./node_modules/.bin/nodeunit
 #
 # Files
 #
-DOC_FILES	 = index.restdown rules.restdown architecture.restdown
+DOC_FILES	 = index.restdown examples.restdown rules.restdown architecture.restdown
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
@@ -69,10 +69,14 @@ node_modules/fwrule/docs/rules.md: | $(NPM_EXEC)
 	$(NPM) install fwrule
 
 docs/rules.restdown: node_modules/fwrule/docs/rules.md
-	cp docs/header.restdown docs/rules.restdown
+	$(TOP)/tools/restdown-header "Firewall API Rule Syntax" > docs/rules.restdown
 	cat node_modules/fwrule/docs/rules.md >> docs/rules.restdown
 
-CLEAN_FILES += ./node_modules $(BUILD)/docs docs/rules.restdown
+docs/examples.restdown: node_modules/fwrule/docs/examples.md
+	$(TOP)/tools/restdown-header "Firewall API Examples" > docs/examples.restdown
+	cat node_modules/fwrule/docs/examples.md >> docs/examples.restdown
+
+CLEAN_FILES += ./node_modules $(BUILD)/docs docs/examples.restdown docs/rules.restdown
 
 
 #

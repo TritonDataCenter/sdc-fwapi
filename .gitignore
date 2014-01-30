@@ -3,6 +3,7 @@
 build
 docs/*.json
 docs/*.html
+docs/examples.restdown
 docs/rules.restdown
 cscope.in.out
 cscope.po.out
