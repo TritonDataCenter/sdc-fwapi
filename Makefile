@@ -65,8 +65,11 @@ teststop:
 		[[ $$? == "0" ]] || exit 1; \
 	done)
 
-node_modules/fwrule/docs/rules.md: | $(NPM_EXEC)
+node_modules/fwrule: | $(NPM_EXEC)
 	$(NPM) install fwrule
+
+node_modules/fwrule/docs/rules.md: node_modules/fwrule
+node_modules/fwrule/docs/examples.md: node_modules/fwrule
 
 docs/rules.restdown: node_modules/fwrule/docs/rules.md
 	$(TOP)/tools/restdown-header "Firewall API Rule Syntax" > docs/rules.restdown
