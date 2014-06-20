@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+#
+# Copyright (c) 2014, Joyent, Inc. All rights reserved.
+#
+# Run API tests.
+#
+# This creates .tap files in OUTPUT_DIR that can be processed by a TAP reader.
+# Testing config and log files are also placed in this dir.
+#
+# Run `./runtests -h` for usage info.
+#
+
+API=fwapi
+if [ "$TRACE" != "" ]; then
+    export PS4='${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    set -o xtrace
+fi
+set -o errexit
+set -o pipefail
+
+
+
+#---- guard
+
+guard_file=/lib/sdc/.sdc-test-no-production-data
+if [[ ! -f "$guard_file" ]]; then
+    cat <<EOF
+To run this test you must create the file:
+
+    $guard_file
+
+after ensuring you have no production data on this SDC.
+EOF
+    exit 2
+fi
+
+
+
+#---- support functions
+
+function fatal
+{
+    echo "$(basename $0): fatal error: $*"
+    exit 1
+}
+
+function usage
+{
+    echo "Usage:"
+    echo "  runtests [OPTIONS...]"
+    echo ""
+    echo "Options:"
+    echo "  -f FILTER   Filter pattern (substring match) for test files to run."
+    echo "  -s          Stop on first error."
+}
+
+
+
+#---- mainline
+
+start_time=$(date +%s)
+
+TOP=$(cd $(dirname $0)/../; pwd)
+NODE_INSTALL=$TOP/node
+NODEUNIT=$TOP/node_modules/.bin/nodeunit
+
+
+# Options.
+opt_test_pattern=
+opt_stop_on_failure=
+while getopts "hf:s" opt
+do
+    case "$opt" in
+        h)
+            usage
+            exit 0
+            ;;
+        f)
+            opt_test_pattern=$OPTARG
+            ;;
+        s)
+            opt_stop_on_failure="true"
+            ;;
+        *)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+
+# Setup a clean output dir.
+OUTPUT_DIR=/var/tmp/${API}test
+echo "# Setup a clean output dir ($OUTPUT_DIR)."
+rm -rf $OUTPUT_DIR
+mkdir -p /$OUTPUT_DIR
+
+cd $TOP
+
+# Run the integration tests
+echo ""
+test_files=$(ls -1 test/integration/*.test.js)
+if [[ -n "$opt_test_pattern" ]]; then
+    test_files=$(echo "$test_files" | grep "$opt_test_pattern" || true)
+    echo "# Running filtered set of test files: $test_files"
+fi
+
+set +o errexit
+
+for file in $test_files; do
+    test_file=$(basename $file)
+    echo "# $test_file"
+    PATH=$NODE_INSTALL/bin:$PATH $NODEUNIT --reporter=tap $file \
+        | tee $OUTPUT_DIR/$test_file.tap
+    [[ "$?" != "0" ]] && [[ -n "$opt_stop_on_failure" ]] && break
+done
+
+set -o errexit
+
+echo ""
+echo "# test output in $OUTPUT_DIR:"
+cd $OUTPUT_DIR
+ls *.tap
+
+
+# Colored summary of results (borrowed from smartos-live.git/src/vm/run-tests).
+echo ""
+echo "# test results:"
+
+end_time=$(date +%s)
+elapsed=$((${end_time} - ${start_time}))
+
+tests=$(grep "^# tests [0-9]" $OUTPUT_DIR/*.tap | cut -d ' ' -f3 | xargs | tr ' ' '+' | bc)
+passed=$(grep "^# pass  [0-9]" $OUTPUT_DIR/*.tap | tr -s ' ' | cut -d ' ' -f3 | xargs | tr ' ' '+' | bc)
+[[ -z ${tests} ]] && tests=0
+[[ -z ${passed} ]] && passed=0
+fail=$((${tests} - ${passed}))
+
+echo "# Completed in ${elapsed} seconds."
+echo -e "# \033[32mPASS: ${passed} / ${tests}\033[39m"
+if [[ ${fail} -gt 0 ]]; then
+    echo -e "# \033[31mFAIL: ${fail} / ${tests}\033[39m"
+    echo ""
+    echo -e "# \033[31mFAILING TESTS:\033[39m"
+    grep -l "^# fail  [0-9]" ${OUTPUT_DIR}/*.tap | sed -e "s,${OUTPUT_DIR}/,," -e 's,.tap,,' -e 's,^,#   ,'
+fi
+echo ""
+
+if [[ ${tests} != ${passed} ]]; then
+    exit 1
+fi
