@@ -106,6 +106,7 @@ pkg: all $(SMF_MANIFESTS)
 	cp -r $(TOP)/test/integration \
 		$(TOP)/test/lib \
 		$(TOP)/test/runtest \
+		$(TOP)/test/runtests \
 		$(INSTDIR)/test/
 	cp -P smf/manifests/*.xml $(INSTDIR)/smf/manifests
 	cp -PR $(NODE_INSTALL) $(INSTDIR)/node
