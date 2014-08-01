@@ -6,6 +6,7 @@
 
 var async = require('async');
 var h = require('./helpers');
+var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
 var util = require('util');
 
@@ -27,24 +28,12 @@ var FORBIDDEN_BODY = {
         'message' : 'owner_uuid does not match'
     } ]
 };
-var FWAPI;
 var OWNERS = [ mod_uuid.v4() ];
 var RULES = [];
 
 
 
-// --- Setup
-
-
-
-exports.setup = function (t) {
-    FWAPI = h.createClient();
-    t.done();
-};
-
-
-
-// --- Create tests
+// --- Tests
 
 
 
@@ -55,64 +44,63 @@ exports['Add rule'] = function (t) {
         rule: 'FROM any TO all vms ALLOW udp PORT 5000'
     });
 
-    FWAPI.createRule(RULES[0], function (err, obj, req, res) {
-        if (h.ifErr(t, err, 'rule create: ' + RULES[0].rule)) {
-            return t.done();
-        }
-
-        t.equal(res.statusCode, 202, 'status code');
-        t.ok(obj.uuid, 'rule has uuid');
-        t.ok(obj.version, 'rule has version');
-        RULES[0].uuid = obj.uuid;
-        RULES[0].version = obj.version;
-        t.deepEqual(obj, RULES[0], 'response');
-
-        FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-            if (h.ifErr(t, err2, 'get rule: ' + RULES[0].uuid)) {
-                return t.done();
-            }
-
-            t.deepEqual(res2, RULES[0], 'getRule');
-            return t.done();
-        });
+    mod_rule.createAndGet(t, {
+        rule: RULES[0],
+        exp: RULES[0]
     });
 };
 
 
+/*
+ * Should not be able to update the rule if owner_uuid is set
+ */
 exports['Update rule when owner_uuid set'] = function (t) {
-    // Should not be able to update the rule if owner_uuid is set
-    var payload = {
-        rule: 'FROM any TO all vms ALLOW udp PORT 5000',
-        owner_uuid: OWNERS[0]
-    };
-
-    FWAPI.updateRule(RULES[0].uuid, payload, function (err, obj, req, res) {
-        t.ok(err, 'error returned');
-        t.equal(res.statusCode, 403, 'error status code');
-        if (!err) {
-            return t.done();
-        }
-
-        t.deepEqual(err.body, FORBIDDEN_BODY, 'error body');
-        return t.done();
+    mod_rule.updateAndGet(t, {
+        uuid: RULES[0].uuid,
+        rule: {
+            rule: 'FROM any TO all vms ALLOW udp PORT 5000',
+            owner_uuid: OWNERS[0]
+        },
+        expCode: 403,
+        expErr: FORBIDDEN_BODY
     });
 };
 
 
+/*
+ * Should not be able to delete the rule if owner_uuid is set
+ */
 exports['Delete rule with owner_uuid set'] = function (t) {
-    // Should not be able to delete the rule if owner_uuid is set
-    var payload = {
-        owner_uuid: OWNERS[0]
-    };
+    mod_rule.del(t, {
+        uuid: RULES[0].uuid,
+        params: {
+            owner_uuid: OWNERS[0]
+        },
+        expCode: 403,
+        expErr: FORBIDDEN_BODY
+    });
+};
 
-    FWAPI.deleteRule(RULES[0].uuid, payload, function (err, obj, req, res) {
-        t.ok(err, 'error returned');
-        t.equal(res.statusCode, 403, 'error status code');
-        if (!err) {
+
+exports['List global rules'] = function (t) {
+    mod_rule.list(t, {
+        params: {
+            global: true
+        }
+    }, function (err, res) {
+        if (err) {
             return t.done();
         }
 
-        t.deepEqual(err.body, FORBIDDEN_BODY, 'error body');
+        var nonGlobals = [];
+        for (var r in res) {
+            var rule = res[r];
+            if (!rule.hasOwnProperty('global') || !rule.global) {
+                nonGlobals.push(rule);
+            }
+        }
+
+        t.deepEqual(nonGlobals, [], 'only global rules in the list');
         return t.done();
     });
 };
@@ -124,9 +112,7 @@ exports['Delete rule with owner_uuid set'] = function (t) {
 
 
 exports.teardown = function (t) {
-    h.deleteRules(t, FWAPI, RULES, function () {
-        return t.done();
-    });
+    mod_rule.delAllCreated(t);
 };
 
 

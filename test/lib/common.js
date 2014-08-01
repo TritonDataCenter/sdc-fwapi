@@ -11,6 +11,18 @@
 
 
 /**
+ * Finish a test
+ */
+function done(err, res, t, callback) {
+    if (callback) {
+        return callback(err, res);
+    }
+
+    return t.done();
+}
+
+
+/**
  * Calls t.ifError, outputs the error body for diagnostic purposes, and
  * returns true if there was an error
  */
@@ -35,6 +47,7 @@ function uuidSort(a, b) {
 
 
 module.exports = {
+    done: done,
     ifErr: ifErr,
     uuidSort: uuidSort
 };
