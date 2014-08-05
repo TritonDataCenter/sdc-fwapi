@@ -103,7 +103,8 @@ pkg: all $(SMF_MANIFESTS)
 		$(TOP)/node_modules \
 		$(TOP)/sapi_manifests \
 		$(INSTDIR)/
-	cp -r $(TOP)/test/integration \
+	cp -r $(TOP)/test/bin \
+		$(TOP)/test/integration \
 		$(TOP)/test/lib \
 		$(TOP)/test/runtest \
 		$(TOP)/test/runtests \
