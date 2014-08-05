@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2013, Joyent, Inc. All rights reserved.
+ * Copyright (c) 2014, Joyent, Inc. All rights reserved.
  *
  * Unit tests for /resolve endpoint
  */
 
 var async = require('async');
 var helpers = require('./helpers');
+var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
 var util = require('util');
 
@@ -18,9 +19,8 @@ var util = require('util');
 // Set this to any of the exports in this file to only run that test,
 // plus setup and teardown
 var runOne;
-var FWAPI;
 var OWNERS = [0, 1, 2, 3, 4, 5].map(function () { return mod_uuid.v4(); });
-var RULES = [];
+var RULES = {};
 var VMS = [0, 1, 2].map(function () { return mod_uuid.v4(); });
 
 
@@ -30,73 +30,95 @@ var VMS = [0, 1, 2].map(function () { return mod_uuid.v4(); });
 
 
 exports.setup = function (t) {
-    FWAPI = helpers.createClient();
-    var rules = [
-        // OWNERS[0] rules
-        'FROM tag other TO tag role ALLOW tcp PORT 5432',
-        util.format('FROM vm %s TO tag role = web ALLOW tcp PORT 80',
-            VMS[0]),
-        'FROM (tag foo = bar OR tag foo = baz) TO tag role = web ALLOW tcp '
-            + 'PORT 5433',
-        util.format('FROM vm %s TO tag role = other ALLOW tcp PORT 81',
-            VMS[1]),
-        'FROM tag now = then TO tag role = other ALLOW tcp PORT 82'
-    ].map(function (r) {
-        return { enabled: true, owner_uuid: OWNERS[0], rule: r };
-    }).concat([
-        {
-            owner_uuid: OWNERS[1],
-            rule: util.format('FROM vm %s TO all vms BLOCK udp PORT 54',
-                VMS[2]),
-            enabled: true
+    var r;
+    var rules = [];
+    RULES = {
+        o0: {
+            otherToRole: {
+                rule: 'FROM tag other TO tag role ALLOW tcp PORT 5432'
+            },
+            vm0ToRoleWeb: {
+                rule: util.format(
+                    'FROM vm %s TO tag role = web ALLOW tcp PORT 80', VMS[0])
+            },
+            fooToRoleWeb: {
+                rule: 'FROM (tag foo = bar OR tag foo = baz) TO tag role = web '
+                    + 'ALLOW tcp PORT 5433'
+            },
+            vm1ToRoleOther: {
+                rule: util.format(
+                    'FROM vm %s TO tag role = other ALLOW tcp PORT 81', VMS[1])
+            },
+            nowThenToRoleOther: {
+                rule:
+                    'FROM tag now = then TO tag role = other ALLOW tcp PORT 82'
+            },
+            numOneToNumTwo: {
+                rule: 'FROM tag num = one TO tag num = two ALLOW tcp PORT 55'
+            }
         },
-        {
-            owner_uuid: OWNERS[2],
-            rule: 'FROM tag one TO all vms BLOCK udp PORT 55',
-            enabled: true
+
+        o1: {
+            vm2ToAll: {
+                owner_uuid: OWNERS[1],
+                rule: util.format('FROM vm %s TO all vms BLOCK udp PORT 54',
+                    VMS[2]),
+                enabled: true
+            }
         },
-        {
-            owner_uuid: OWNERS[3],
-            rule: 'FROM tag one TO all vms ALLOW udp PORT 56',
-            enabled: true
+
+        o2: {
+            oneToAll: {
+                owner_uuid: OWNERS[2],
+                rule: 'FROM tag one TO all vms BLOCK udp PORT 55',
+                enabled: true
+            }
         },
-        {
-            owner_uuid: OWNERS[4],
-            rule: 'FROM all vms TO tag one BLOCK udp PORT 57',
-            enabled: true
+
+        o3: {
+            oneToAll: {
+                owner_uuid: OWNERS[3],
+                rule: 'FROM tag one TO all vms ALLOW udp PORT 56',
+                enabled: true
+            }
         },
-        {
-            owner_uuid: OWNERS[5],
-            rule: 'FROM all vms TO tag one ALLOW udp PORT 58',
-            enabled: true
+
+        o4: {
+            allToOne: {
+                owner_uuid: OWNERS[4],
+                rule: 'FROM all vms TO tag one BLOCK udp PORT 57',
+                enabled: true
+            }
+        },
+
+        o5: {
+            allToOne: {
+                owner_uuid: OWNERS[5],
+                rule: 'FROM all vms TO tag one ALLOW udp PORT 58',
+                enabled: true
+            }
         }
-    ]);
+    };
+
+    for (r in RULES.o0) {
+        RULES.o0[r] = {
+            enabled: true,
+            owner_uuid: OWNERS[0],
+            rule: RULES.o0[r].rule
+        };
+    }
+
+    for (var o in RULES) {
+        for (r in RULES[o]) {
+            rules.push(RULES[o][r]);
+        }
+    }
 
     async.forEachSeries(rules, function (rule, cb) {
-        FWAPI.createRule(rule, function (err, obj, req, res) {
-            if (helpers.ifErr(t, err, 'rule create: ' + rule.rule)) {
-                return cb(err);
-            }
-
-            t.equal(res.statusCode, 202, 'status code');
-            t.ok(obj.uuid, 'rule has uuid');
-            t.ok(obj.version, 'rule has version');
-            rule.uuid = obj.uuid;
-            rule.version = obj.version;
-
-            t.deepEqual(obj, rule, 'response');
-            RULES.push(rule);
-
-            FWAPI.getRule(rule.uuid, function (err2, res2) {
-                if (helpers.ifErr(t, err2, 'get rule: ' + rule.uuid)) {
-                    return cb(err2);
-                }
-
-                t.deepEqual(res2, rule, 'getRule');
-                return cb();
-            });
-        });
-
+        mod_rule.createAndGet(t, {
+            rule: rule,
+            exp: rule
+        }, cb);
     }, function (err) {
         return t.done();
     });
@@ -115,9 +137,9 @@ exports['resolve'] = function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[0],
-            rules: [0, 1, 2, 3, 4].map(function (n) {
-                return RULES[n];
-            }).sort(helpers.uuidSort),
+            rules: [ RULES.o0.otherToRole, RULES.o0.vm0ToRoleWeb,
+                RULES.o0.fooToRoleWeb, RULES.o0.vm1ToRoleOther,
+                RULES.o0.nowThenToRoleOther ],
             tags: { other: true, foo: ['bar', 'baz'], now: ['then'] },
             vms: [ VMS[0], VMS[1] ].sort()
         } ],
@@ -130,7 +152,8 @@ exports['resolve'] = function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[0],
-            rules: [ RULES[0], RULES[1], RULES[2] ].sort(helpers.uuidSort),
+            rules: [ RULES.o0.otherToRole, RULES.o0.vm0ToRoleWeb,
+                RULES.o0.fooToRoleWeb ],
             tags: { other: true, foo: ['bar', 'baz'] },
             vms: [ VMS[0] ]
         } ],
@@ -143,7 +166,8 @@ exports['resolve'] = function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[0],
-            rules: [ RULES[0], RULES[3], RULES[4] ].sort(helpers.uuidSort),
+            rules: [ RULES.o0.otherToRole, RULES.o0.vm1ToRoleOther,
+                RULES.o0.nowThenToRoleOther ],
             tags: { other: true, now: ['then'] },
             vms: [ VMS[1] ]
         } ],
@@ -160,7 +184,7 @@ exports['resolve'] = function (t) {
             // allVMs is set
             allVMs: true,
             owner_uuid: OWNERS[1],
-            rules: [ RULES[5] ],
+            rules: [ RULES.o1.vm2ToAll ],
             tags: { },
             vms: [ ]
         } ],
@@ -177,7 +201,7 @@ exports['resolve'] = function (t) {
             // show up here
             allVMs: false,
             owner_uuid: OWNERS[2],
-            rules: [ RULES[6] ],
+            rules: [ RULES.o2.oneToAll ],
             tags: { },
             vms: [ ]
         } ],
@@ -192,7 +216,7 @@ exports['resolve'] = function (t) {
             // from tag one is a no-op, so only return tag one
             allVMs: false,
             owner_uuid: OWNERS[3],
-            rules: [ RULES[7] ],
+            rules: [ RULES.o3.oneToAll ],
             tags: { one: true },
             vms: [ ]
         } ],
@@ -205,7 +229,7 @@ exports['resolve'] = function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[4],
-            rules: [ RULES[8] ],
+            rules: [ RULES.o4.allToOne ],
             tags: { one: true },
             vms: [ ]
         } ],
@@ -218,7 +242,7 @@ exports['resolve'] = function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[4],
-            rules: [ RULES[8] ],
+            rules: [ RULES.o4.allToOne ],
             tags: { one: true },
             vms: [ ]
         } ],
@@ -231,7 +255,7 @@ exports['resolve'] = function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[5],
-            rules: [ RULES[9] ],
+            rules: [ RULES.o5.allToOne ],
             tags: { },
             vms: [ ]
         } ],
@@ -244,8 +268,21 @@ exports['resolve'] = function (t) {
         {
             allVMs: true,
             owner_uuid: OWNERS[5],
-            rules: [ RULES[9] ],
+            rules: [ RULES.o5.allToOne ],
             tags: { },
+            vms: [ ]
+        } ],
+
+    [   util.format('OWNERS[0] (%s): tag num', OWNERS[0]),
+        {
+            owner_uuid: OWNERS[0],
+            tags: { num: ['two'] }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: [ RULES.o0.numOneToNumTwo ],
+            tags: { num: ['one'] },
             vms: [ ]
         } ]
 
@@ -254,20 +291,11 @@ exports['resolve'] = function (t) {
     ];
 
     async.forEachSeries(exp, function (data, cb) {
-        var desc = ': ' + data[0];
-        FWAPI.post('/resolve', data[1], function (err, res) {
-            if (helpers.ifErr(t, err, 'resolve' + desc)) {
-                return cb(err);
-            }
-
-            res.rules.sort(helpers.uuidSort);
-            t.deepEqual(res.rules.map(function (r) { return r.rule; }).sort(),
-                data[2].rules.map(function (r) { return r.rule; }).sort(),
-                'rule text' + desc);
-
-            t.deepEqual(res, data[2], 'resolved data' + desc);
-            return cb();
-        });
+        mod_rule.resolve(t, {
+            desc: ': ' + data[0],
+            params: data[1],
+            exp: data[2]
+        }, cb);
 
     }, function (err) {
         return t.done();
@@ -281,15 +309,7 @@ exports['resolve'] = function (t) {
 
 
 exports.teardown = function (t) {
-    async.forEachSeries(RULES, function (rule, cb) {
-        FWAPI.deleteRule(rule.uuid, function (err) {
-            helpers.ifErr(t, err, 'deleting: ' + rule.uuid);
-            return cb(err);
-        });
-
-    }, function (err) {
-        return t.done();
-    });
+    mod_rule.delAllCreated(t);
 };
 
 

@@ -98,16 +98,33 @@ mkdir -p /$OUTPUT_DIR
 cd $TOP
 
 # Run the integration tests
-echo ""
+multi_test_files=
 test_files=$(ls -1 test/integration/*.test.js)
 if [[ -n "$opt_test_pattern" ]]; then
     test_files=$(echo "$test_files" | grep "$opt_test_pattern" || true)
     echo "# Running filtered set of test files: $test_files"
 fi
 
+vmapi_url=$(json -f /opt/smartdc/fwapi/config.json vmapi.url)
+cnapi_url=${vmapi_url//vmapi/cnapi}
+
+num_servers=$(curl -sS ${cnapi_url}/servers | json -a uuid setup | grep true | wc -l)
+if [[ ${num_servers} -gt 1 ]]; then
+    echo "# More than 1 server: running multi-server tests"
+    multi_test_files=$(ls -1 test/integration/*.multi-test.js)
+
+    if [[ ! -f /opt/smartdc/fwapi/test/config.json ]]; then
+        # No test config present - generate it
+        /opt/smartdc/fwapi/test/bin/gen-multi-test-config
+    fi
+
+    [[ ! -f /opt/smartdc/fwapi/test/config.json ]] && fatal "Could not generate multi-server test config"
+fi
+
+echo ""
 set +o errexit
 
-for file in $test_files; do
+for file in $test_files $multi_test_files; do
     test_file=$(basename $file)
     echo "# $test_file"
     PATH=$NODE_INSTALL/bin:$PATH $NODEUNIT --reporter=tap $file \

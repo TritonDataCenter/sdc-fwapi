@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# Copyright (c) 2014, Joyent, Inc. All rights reserved.
+#
+# Generate config.json for running multi-server integration tests.
+
+if [ "$TRACE" != "" ]; then
+    export PS4='${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    set -o xtrace
+fi
+
+
+
+#---- support functions
+
+function fatal
+{
+    echo "$(basename $0): fatal error: $*"
+    exit 1
+}
+
+
+
+#---- mainline
+
+user=4917d426-2097-42f7-9303-b1968cd7bb3e
+username=fwtester1
+
+conf=/opt/smartdc/fwapi/config.json
+ufds_url=$(json -f $conf ufds.url)
+ufds_dn=$(json -f $conf ufds.bindDN)
+ufds_pw=$(json -f $conf ufds.bindPassword)
+
+[[ -z ${ufds_url} ]] && fatal "Could not find ufds.url in $conf"
+[[ -z ${ufds_dn} ]] && fatal "Could not find ufds.bindDN in $conf"
+[[ -z ${ufds_pw} ]] && fatal "Could not find ufds.bindPassword in $conf"
+
+export PATH=/usr/openldap/bin:$PATH
+export LDAPTLS_REQCERT=allow
+export ldap_opts="-H ${ufds_url} -x -D ${ufds_dn} -w ${ufds_pw}"
+
+dn=$(LDAPTLS_REQCERT=allow /usr/openldap/bin/ldapsearch $ldap_opts -LLL -b o=smartdc "(uuid=${user})" | sed -n '1 {h; $ !d;}; $ {H; g; s/\n //g; p; q;}; /^ / {H; d;}; /^ /! {x; s/\n //g; p;}' | grep '^dn:')
+
+if [[ -n ${dn} ]]; then
+    echo "# User \"${dn}\" already exists: not adding"
+    exit 0
+fi
+
+echo "# Adding test user ${username} (${user})"
+
+fingerprint="de:e7:73:9a:b0:91:31:3e:72:8d:9f:62:ca:58:a2:ec"
+
+/usr/openldap/bin/ldapadd $ldap_opts <<EOF
+dn: uuid=${user}, ou=users, o=smartdc
+login: ${username}
+uuid: ${user}
+userpassword: secret123
+email: test.user@joyent.com
+cn: Testy
+sn: McTesterson
+company: Joyent
+objectclass: sdcPerson
+
+dn: fingerprint=${fingerprint}, uuid=${user}, ou=users, o=smartdc
+name: id_rsa
+fingerprint: ${fingerprint}
+openssh: ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA2s5twaK3yK3iEW1Ka1rCoE7pENen2ijsZpSCDTxeKL9gzXE/W5Hm7VEp2AY+POWE3sTVmLf+b+mc3+ABCq3UnZgMGgsfZuTmmzQYuWI3yH1m1m3PzOjxF4n+2jWwwZ9JAyuzxQFfch8WPzhoylHEbuIsLc8QKUkr+26VYEA4o3ztK3vwNQ6WqSIfl9zGEak2u6laSQH8AFwodZfamEXfgj4YfM23gDz382aJOVa5q6EnDK01/8yveOM9AxK52y4+40mpQJiBwUTRMtP1irB6sT/zXJCVBkwKAiZnYlb9jHEwU1sN2QOe9rh0LwxO3j0wQuy7FmAtFOqZQlDN5Bki7Q== automation@lab-www-00
+objectclass: sdcKey
+EOF

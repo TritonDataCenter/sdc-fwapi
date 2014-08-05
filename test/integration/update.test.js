@@ -5,7 +5,7 @@
  */
 
 var async = require('async');
-var h = require('./helpers');
+var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
 var util = require('util');
 
@@ -18,24 +18,12 @@ var util = require('util');
 // Set this to any of the exports in this file to only run that test,
 // plus setup and teardown
 var runOne;
-var FWAPI;
 var OWNERS = [ mod_uuid.v4() ];
 var RULES = [];
 
 
 
-// --- Setup
-
-
-
-exports.setup = function (t) {
-    FWAPI = h.createClient();
-    t.done();
-};
-
-
-
-// --- Create tests
+// --- Tests
 
 
 
@@ -46,26 +34,9 @@ exports['Add rule'] = function (t) {
         rule: 'FROM all vms TO tag test BLOCK tcp PORT 8000'
     });
 
-    FWAPI.createRule(RULES[0], function (err, obj, req, res) {
-        if (h.ifErr(t, err, 'rule create: ' + RULES[0].rule)) {
-            return t.done();
-        }
-
-        t.equal(res.statusCode, 202, 'status code');
-        t.ok(obj.uuid, 'rule has uuid');
-        t.ok(obj.version, 'rule has version');
-        RULES[0].uuid = obj.uuid;
-        RULES[0].version = obj.version;
-        t.deepEqual(obj, RULES[0], 'response');
-
-        FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-            if (h.ifErr(t, err2, 'get rule: ' + RULES[0].uuid)) {
-                return t.done();
-            }
-
-            t.deepEqual(res2, RULES[0], 'getRule');
-            return t.done();
-        });
+    mod_rule.create(t, {
+        rule: RULES[0],
+        exp: RULES[0]
     });
 };
 
@@ -132,32 +103,12 @@ exports['Update rule'] = function (t) {
     ];
 
     async.forEachSeries(exp, function (data, cb) {
-        var desc = ': ' + data[0];
-        var payload = data[1];
-
-        FWAPI.updateRule(RULES[0].uuid, payload, function (err, obj, req, res) {
-            if (h.ifErr(t, err, 'update' + desc)) {
-                t.equal(payload.rule, RULES[0].rule, 'rule' + desc);
-                return cb(err);
-            }
-
-            t.equal(res.statusCode, 202, 'status code' + desc);
-            t.ok(obj.version !== RULES[0].version, 'version updated'+ desc);
-            RULES[0].version = obj.version;
-            RULES[0].rule = payload.rule;
-
-            t.deepEqual(obj, RULES[0], 'response' + desc);
-
-            FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-                if (h.ifErr(t, err2, 'get' + desc)) {
-                    return cb(err);
-                }
-
-                t.deepEqual(res2, RULES[0], 'getRule' + desc);
-                return cb();
-            });
-        });
-
+        t.ok(data[0], '# ' + data[0]);
+        mod_rule.updateAndGet(t, {
+            uuid: RULES[0].uuid,
+            rule: data[1],
+            partialExp: data[1]
+        }, cb);
     }, function () {
         return t.done();
     });
@@ -170,34 +121,7 @@ exports['Update rule'] = function (t) {
 
 
 exports.teardown = function (t) {
-    async.forEachSeries(RULES, function (rule, cb) {
-        var desc = ': ' + rule.rule;
-        FWAPI.deleteRule(rule.uuid, function (err, obj, req, res) {
-            t.ifError(err, 'rule delete' + desc);
-            if (err) {
-                return cb(err);
-            }
-
-            t.equal(res.statusCode, 204, 'status code' + desc);
-
-            FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-                t.ok(err2, 'getRule error' + desc);
-                if (!err2) {
-                    return cb(err2);
-                }
-
-                t.deepEqual(err2.body, {
-                    code: 'ResourceNotFound',
-                    message: 'Rule not found'
-                }, 'error body' + desc);
-
-                return cb();
-            });
-        });
-
-    }, function () {
-        return t.done();
-    });
+    mod_rule.delAllCreated(t);
 };
 
 

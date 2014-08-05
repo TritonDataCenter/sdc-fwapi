@@ -57,6 +57,7 @@ function provisionOne(t, opts, callback) {
     client.createVm(vmParams, function (err, job) {
         if (ifErr(t, err, 'provision VM' + desc)) {
             t.deepEqual(vmParams, {}, 'VM params');
+            LOG.error({ params: vmParams }, 'failed to create VM');
             return callback(err);
         }
 
@@ -80,7 +81,7 @@ function provisionOne(t, opts, callback) {
                 }
 
                 if (res.state == 'failed') {
-                    LOG.debug({ vm_uuid: job.vm_uuid },
+                    LOG.error({ vm_uuid: job.vm_uuid, params: vmParams },
                         'failed to provision VM');
                     return callback(new VError(
                         'failed to provision VM %s (job %s)',
@@ -244,11 +245,14 @@ function provision(t, opts, callback) {
         newOpts.vm = vm;
         provisionOne(t, newOpts, cb);
     }, function (err, res) {
-        if (res) {
-            LOG.info({ vms: res }, 'provisioned VMs');
+        if (err) {
+            return done(err, null, t, callback);
         }
 
-        return done(err, res, t, callback);
+        var vms = res.filter(function (v) { return (v && v !== null); });
+        LOG.info({ vms: vms }, 'provisioned VMs');
+
+        return done(null, vms, t, callback);
     });
 }
 
