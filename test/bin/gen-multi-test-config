@@ -45,7 +45,7 @@ servers=( $(curl -sS ${cnapi_url}/servers | json -a uuid setup | grep true | awk
 ${dir}/add-test-user
 
 echo "Writing multi-server test config: ${json_file}"
-cat - >&2 <<JSON
+cat - >${json_file} <<JSON
 {
   "provision_image": "${image_uuid}",
   "owner_uuid": "4917d426-2097-42f7-9303-b1968cd7bb3e",
