@@ -48,7 +48,7 @@ INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 #
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(NODEUNIT) $(REPO_DEPS) sdc-scripts
-	$(NPM) rebuild
+	$(NPM) install
 
 $(NODEUNIT): | $(NPM_EXEC)
 	$(NPM) install
