@@ -12,6 +12,7 @@ var fwapiClient = require('sdc-clients/lib/fwapi');
 var mockery = require('mockery');
 var mocks = require('./mocks');
 var mod_uuid = require('node-uuid');
+var os = require('os');
 var restify = require('restify');
 var util = require('util');
 var verror = require('verror');
@@ -139,6 +140,19 @@ function getMorayUpdates() {
 }
 
 
+/**
+ * Returns a moray update object
+ */
+function morayUpdate(name, val) {
+    return {
+        _v: 1,
+        host: os.hostname(),
+        name: name,
+        value: val
+    };
+}
+
+
 function setupMocks() {
     mockery.enable({ warnOnUnregistered: false });
     for (var m in mocks) {
@@ -174,6 +188,7 @@ module.exports = {
     createClientAndServer: createClientAndServer,
     generateVM: generateVM,
     getMorayUpdates: getMorayUpdates,
+    morayUpdate: morayUpdate,
     stopServer: stopServer,
     uuidSort: uuidSort
 };

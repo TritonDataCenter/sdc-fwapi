@@ -52,6 +52,8 @@ function checkUrl(t, opts, callback) {
     assert.string(opts.server_uuid, 'opts.server_uuid');
     assert.string(opts.url, 'opts.url');
 
+    t.ok(opts.server_uuid, 'server_uuid=' + opts.server_uuid);
+
     getClient(t, opts.server_uuid, function (err, client) {
         if (err) {
             return callback(err);
@@ -277,6 +279,8 @@ function getRule(t, opts, callback) {
         url: '/rules/' + opts.uuid
     };
 
+    // XXX: Should actually be checking that the req_id that we care about
+    // made it to the firewaller
     checkUrl(t, checkOpts, function (err, req, res, obj) {
         if (err && err.client) {
             // Couldn't get the client - no sense in going further

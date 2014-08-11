@@ -81,8 +81,12 @@ function provisionOne(t, opts, callback) {
                 }
 
                 if (res.state == 'failed') {
-                    LOG.error({ vm_uuid: job.vm_uuid, params: vmParams },
-                        'failed to provision VM');
+                    LOG.error({
+                        job_uuid: job.job_uuid,
+                        params: vmParams,
+                        vm_uuid: job.vm_uuid
+                    }, 'failed to provision VM');
+
                     return callback(new VError(
                         'failed to provision VM %s (job %s)',
                         job.vm_uuid, job.job_uuid));
@@ -251,6 +255,25 @@ function provision(t, opts, callback) {
 
         var vms = res.filter(function (v) { return (v && v !== null); });
         LOG.info({ vms: vms }, 'provisioned VMs');
+
+        // Log information about the VMs and make sure we provisioned
+        // the correct number
+        t.equal(vms.length, opts.vms.length,
+            fmt('%d VMs provisioned', opts.vms.length));
+
+        for (var i = 0; i < opts.vms.length; i++) {
+            var inVm = opts.vms[i];
+            t.ok(vms[i], fmt('VM %d provisioned', i));
+
+            if (vms[i]) {
+                t.ok(vms[i].server_uuid, fmt('VM %d uuid=%s, server_uuid=%s',
+                    vms[i].uuid, vms[i].server_uuid));
+                if (inVm.server_uuid) {
+                    t.equal(vms[i].server_uuid, inVm.server_uuid,
+                        fmt('VM %d server_uuid is correct', i));
+                }
+            }
+        }
 
         return done(null, vms, t, callback);
     });

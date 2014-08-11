@@ -57,7 +57,7 @@ exports['Add rule'] = function (t) {
 exports['Update rule when owner_uuid set'] = function (t) {
     mod_rule.updateAndGet(t, {
         uuid: RULES[0].uuid,
-        rule: {
+        params: {
             rule: 'FROM any TO all vms ALLOW udp PORT 5000',
             owner_uuid: OWNERS[0]
         },

@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2013, Joyent, Inc. All rights reserved.
+ * Copyright (c) 2014, Joyent, Inc. All rights reserved.
  *
  * Unit tests for /rules endpoints
  */
 
-var helpers = require('./helpers');
+var h = require('./helpers');
 var mocks = require('./mocks');
-var os = require('os');
 var util = require('util');
 
 
@@ -20,7 +19,7 @@ var util = require('util');
 var runOne;
 var FWAPI;
 var RULES = [];
-var VMS = [ helpers.generateVM(), helpers.generateVM() ];
+var VMS = [ h.generateVM(), h.generateVM() ];
 
 
 
@@ -29,7 +28,7 @@ var VMS = [ helpers.generateVM(), helpers.generateVM() ];
 
 
 exports.setup = function (t) {
-    helpers.createClientAndServer(function (err, res) {
+    h.createClientAndServer(function (err, res) {
         t.ifError(err, 'server creation');
         t.ok(res, 'client');
         FWAPI = res;
@@ -64,12 +63,8 @@ exports['Add rule'] = function (t) {
         RULES[0].version = obj.version;
 
         t.deepEqual(obj, RULES[0], 'response');
-        t.deepEqual(helpers.getMorayUpdates(), [
-            {
-                host: os.hostname(),
-                name: 'fw.add_rule',
-                value: RULES[0]
-            }
+        t.deepEqual(h.getMorayUpdates(), [
+            h.morayUpdate('fw.add_rule', RULES[0])
         ], 'moray updates');
 
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
@@ -103,12 +98,8 @@ exports['Update rule'] = function (t) {
         RULES[0].version = obj.version;
 
         t.deepEqual(obj, RULES[0], 'response');
-        t.deepEqual(helpers.getMorayUpdates(), [
-            {
-                host: os.hostname(),
-                name: 'fw.update_rule',
-                value: RULES[0]
-            }
+        t.deepEqual(h.getMorayUpdates(), [
+            h.morayUpdate('fw.update_rule', RULES[0])
         ], 'moray updates');
 
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
@@ -133,12 +124,8 @@ exports['Delete rule'] = function (t) {
 
         t.equal(res.statusCode, 204, 'status code');
 
-        t.deepEqual(helpers.getMorayUpdates(), [
-            {
-                host: os.hostname(),
-                name: 'fw.del_rule',
-                value: RULES[0]
-            }
+        t.deepEqual(h.getMorayUpdates(), [
+            h.morayUpdate('fw.del_rule', RULES[0])
         ], 'moray updates');
 
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
@@ -164,7 +151,7 @@ exports['Delete rule'] = function (t) {
 
 
 exports['Stop server'] = function (t) {
-    helpers.stopServer(function (err) {
+    h.stopServer(function (err) {
         t.ifError(err, 'server stop');
         t.done();
     });

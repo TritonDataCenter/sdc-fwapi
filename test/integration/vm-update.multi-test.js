@@ -111,17 +111,6 @@ exports['Provision VMs'] = function (t) {
     }, function (err, res) {
         if (res) {
             VMS = res;
-            if (res.length > 0) {
-                t.ok(VMS[0].server_uuid, fmt('VM 0 uuid=%s, server_uuid=%s',
-                    VMS[0].uuid, VMS[0].server_uuid));
-            }
-
-            if (res.length > 1) {
-                t.ok(VMS[1].server_uuid, fmt('VM 1 uuid=%s, server_uuid=%s',
-                    VMS[1].uuid, VMS[1].server_uuid));
-                t.ok(VMS[0].server_uuid != VMS[1].server_uuid,
-                    'VMs on different servers');
-            }
         }
 
         return t.done();
@@ -139,7 +128,7 @@ exports['After provision: rules'] = {
     // Since both VMs have their firewalls disabled, neither should have
     // the rule present.
 
-    'CN 1: ssh1 rule not present': function (t) {
+    'CN 0: ssh1 rule not present': function (t) {
         mod_cn.getRule(t, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.ssh1.uuid,
@@ -157,7 +146,7 @@ exports['After provision: rules'] = {
         });
     },
 
-    'CN 2: ssh1 rule not present': function (t) {
+    'CN 1: ssh1 rule not present': function (t) {
         mod_cn.getRule(t, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.ssh1.uuid,
@@ -190,7 +179,7 @@ exports['Enable firewall'] = {
         });
     },
 
-    'CN 1: ssh1 rule not present': function (t) {
+    'CN 0: ssh1 rule not present': function (t) {
         mod_cn.getRule(t, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.ssh1.uuid,
@@ -199,7 +188,7 @@ exports['Enable firewall'] = {
         });
     },
 
-    'CN 2: ssh1 rule present': function (t) {
+    'CN 1: ssh1 rule present': function (t) {
         mod_cn.getRule(t, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.ssh1.uuid,
@@ -207,7 +196,7 @@ exports['Enable firewall'] = {
         });
     },
 
-    'CN 2: RVM 0 present': function (t) {
+    'CN 1: RVM 0 present': function (t) {
         mod_cn.getRVM(t, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[0].uuid,

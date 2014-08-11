@@ -106,7 +106,7 @@ exports['Update rule'] = function (t) {
         t.ok(data[0], '# ' + data[0]);
         mod_rule.updateAndGet(t, {
             uuid: RULES[0].uuid,
-            rule: data[1],
+            params: data[1],
             partialExp: data[1]
         }, cb);
     }, function () {

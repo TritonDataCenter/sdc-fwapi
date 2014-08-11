@@ -145,6 +145,9 @@ function del(t, opts, callback) {
     var desc = fmt(' (del rule=%s)', opts.uuid);
     var params = opts.params || {};
 
+    t.ok(opts.uuid, 'uuid ' + desc);
+    LOG.debug({ opts: opts }, 'deleting rule');
+
     client.deleteRule(opts.uuid, params, function (err, obj, req, res) {
         if (opts.expErr) {
             t.ok(err, 'expected error' + desc);
@@ -224,6 +227,7 @@ function get(t, opts, callback) {
     assert.optionalObject(opts.exp, 'opts.exp');
     assert.optionalObject(opts.expErr, 'opts.expErr');
     assert.optionalObject(opts.partialExp, 'opts.partialExp');
+    assert.optionalObject(opts.rule, 'opts.rule');
 
     var client = opts.client || mod_client.get('fwapi');
     var desc = fmt(' (uuid=%s)', opts.uuid);
@@ -245,9 +249,9 @@ function get(t, opts, callback) {
         }
 
         if (opts.exp) {
-            ['uuid', 'version'].forEach(function (p) {
-                if (!opts.exp.hasOwnProperty(p)) {
-                    opts.exp[p] = obj[p];
+            ['uuid', 'version'].forEach(function (k) {
+                if (!opts.exp.hasOwnProperty(k)) {
+                    opts.exp[k] = obj[k];
                 }
             });
 
@@ -266,6 +270,19 @@ function get(t, opts, callback) {
         }
 
         RULES[obj.uuid] = clone(obj);
+
+        // If we passed in a rule, update it in place
+        if (opts.rule) {
+            var p;
+            for (p in opts.rule) {
+                delete opts.rule[p];
+            }
+
+            for (p in obj) {
+                opts.rule[p] = obj[p];
+            }
+        }
+
         return done(null, obj, t, callback);
     });
 }
@@ -376,16 +393,21 @@ function update(t, opts, callback) {
     assert.object(opts, 'opts');
     assert.optionalFunc(callback, 'callback');
 
-    assert.object(opts.rule, 'opts.rule');
+    assert.object(opts.params, 'opts.params');
     assert.string(opts.uuid, 'opts.uuid');
     assert.optionalObject(opts.exp, 'opts.exp');
     assert.optionalObject(opts.expErr, 'opts.expErr');
     assert.optionalObject(opts.partialExp, 'opts.partialExp');
+    assert.optionalObject(opts.rule, 'opts.rule');
 
     var client = opts.client || mod_client.get('fwapi');
-    var desc = fmt(' (rule=%s, uuid=%s)', JSON.stringify(opts.rule), opts.uuid);
+    var desc = fmt(' (params=%s, uuid=%s)', JSON.stringify(opts.params),
+        opts.uuid);
 
-    client.updateRule(opts.uuid, opts.rule, function (err, obj, req, res) {
+    t.ok(opts.uuid, 'update' + desc);
+    LOG.debug({ opts: opts }, 'updating rule');
+
+    client.updateRule(opts.uuid, opts.params, function (err, obj, req, res) {
         if (opts.expErr) {
             t.ok(err, 'expected error');
             if (err) {
@@ -401,6 +423,7 @@ function update(t, opts, callback) {
             return done(err, null, t, callback);
         }
 
+        var p;
         var updateID = res.headers['x-update-id'];
         t.ok(updateID, 'x-update-id: ' + updateID + desc);
 
@@ -415,7 +438,7 @@ function update(t, opts, callback) {
             // Check to make sure that only the partial changes have changed
             var newExp = clone(RULES[opts.uuid]);
             newExp.version = obj.version;
-            for (var p in opts.partialExp) {
+            for (p in opts.partialExp) {
                 newExp[p] = opts.partialExp[p];
             }
 
@@ -423,6 +446,18 @@ function update(t, opts, callback) {
         }
 
         RULES[obj.uuid] = clone(obj);
+
+        // If we passed in a rule, update it in place
+        if (opts.rule) {
+            for (p in opts.rule) {
+                delete opts.rule[p];
+            }
+
+            for (p in obj) {
+                opts.rule[p] = obj[p];
+            }
+        }
+
         return done(null, obj, t, callback);
     });
 }
@@ -487,7 +522,6 @@ function vmRules(t, opts, callback) {
                     newExp.sort(common.uuidSort), 'full result' + desc);
             }
 
-            RULES[obj.uuid] = clone(obj);
             return done(null, obj, t, callback);
         });
     });
@@ -496,6 +530,9 @@ function vmRules(t, opts, callback) {
 
 
 module.exports = {
+    get _rules() {
+        return RULES;
+    },
     create: create,
     createAndGet: createAndGet,
     del: del,
