@@ -356,9 +356,7 @@ exports['Enable rule'] = {
     'FWAPI rules for VM 1': function (t) {
         mod_rule.vmRules(t, {
             uuid: VMS[1].uuid,
-            // XXX: RULES.db should apply here as soon as FWAPI-183
-            // is fixed
-            exp: [ RULES.ssh ]
+            exp: [ RULES.db, RULES.ssh ]
         });
     }
 };
@@ -415,9 +413,7 @@ exports['Add VMs rule'] = {
     'FWAPI rules for VM 1': function (t) {
         mod_rule.vmRules(t, {
             uuid: VMS[1].uuid,
-            // XXX: RULES.db should apply here as soon as FWAPI-183
-            // is fixed
-            exp: [ RULES.https, RULES.ssh ]
+            exp: [ RULES.db, RULES.https, RULES.ssh ]
         });
     },
 

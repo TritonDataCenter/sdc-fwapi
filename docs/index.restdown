@@ -331,6 +331,99 @@ Returns the rules that apply to a VM.
 
 
 
+# Resolve
+
+This is an internal API endpoint used by the firewaller agent to fetch
+rules from the API.  **Its interface is unstable and for internal use only.**
+
+## POST /resolve
+
+This endpoint is used by the firewaller agent to fetch rules and assist with
+determining which remote VMs need to be transfered to a Compute Node.  It is
+intended to resolve the following information:
+
+For a given set of VMs that have a certain set of tags,
+
+* What firewall rules apply to those VMs?
+* What data do I need to request from VMAPI to retrieve VMs on other Compute
+  Nodes that are targets of those rules?
+
+### Inputs
+
+||**Field**||**Type**||**Description**||
+||owner_uuid||UUID||Owner UUID of the rule (required)||
+||vms||Array of UUIDs||VM UUIDs to query (optional)||
+||tags||Object||Tag key / values to query (optional)||
+
+### Example: get the rules that apply to VM 2ca7d243-215f-41d7-a8ed-c83e4712a8bf
+
+    POST /resolve -d '
+    {
+      "owner_uuid": "98c2d1f4-66f4-468c-97ff-4b19c5d9ab22",
+      "tags": {
+        "foo": [ "bar", "blah" ]
+      },
+      "vms": [ "b3073275-3c07-44ed-9e20-4c4fe3bb1e7f" ]
+    }'
+
+    {
+      "rules": [
+        {
+          "enabled": false,
+          "owner_uuid": "98c2d1f4-66f4-468c-97ff-4b19c5d9ab22",
+          "rule": "FROM (tag foo = bar OR tag foo = baz) TO tag other ALLOW tcp PORT 53",
+          "uuid": "fe1a83d9-2925-4c31-8b5d-ced893521a84",
+          "version": "1407839134259.054114"
+        },
+        {
+          "enabled": false,
+          "owner_uuid": "98c2d1f4-66f4-468c-97ff-4b19c5d9ab22",
+          "rule": "FROM (tag role = db OR tag role = www) TO tag foo = blah ALLOW tcp PORT 54",
+          "uuid": "e0f3de04-d10e-4f54-9625-393196e66b69",
+          "version": "1408036607587.069377"
+        },
+        {
+          "description": "allow pings to all VMs",
+          "enabled": true,
+          "global": true,
+          "rule": "FROM any TO all vms ALLOW icmp TYPE 8 CODE 0",
+          "uuid": "34db1b5a-4097-4c91-b2bc-291b6efe67c0",
+          "version": "1407798898407.030641"
+        },
+        {
+          "enabled": true,
+          "owner_uuid": "98c2d1f4-66f4-468c-97ff-4b19c5d9ab22",
+          "rule": "FROM tag something TO vm b3073275-3c07-44ed-9e20-4c4fe3bb1e7f ALLOW tcp PORT 8080",
+          "uuid": "7cf05767-74a9-4f22-a224-08eb54c935dd",
+          "version": "1408036482005.069377"
+        }
+      ],
+      "tags": {
+        "role": [ "db", "www" ],
+        "something": true
+      },
+      "vms": [],
+      "allVMs": false,
+      "owner_uuid": "98c2d1f4-66f4-468c-97ff-4b19c5d9ab22"
+    }
+
+
+In the response above:
+
+* *rules* is the list of rules that apply to that set of VMs and tags.
+* *tags* is a mapping of tag key / values to retrieve.  If a key is set to true,
+  all VMs that have a tag with that name need to be retrieved, regardless of
+  the tag's value. If set to an array of values, tags with that name and
+  the values in the array need to be retrieved.
+* *vms* is a list of VM UUIDs to retrieve.
+* *allVMs* indicates that all VMs from this owner need to be retrieved.
+
+Note that the values returned effectively form an OR query, so for the example
+above, we need to retrieve VMs with (tag role = db) OR (role = www) OR (tag
+something).
+
+
+
 # Changelog
 
 ## 2013-03-01

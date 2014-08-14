@@ -12,6 +12,7 @@ var done = common.done;
 var fmt = require('util').format;
 var ifErr = common.ifErr;
 var mod_client = require('./client');
+var mod_uuid = require('node-uuid');
 var mod_log = require('./log');
 
 
@@ -302,7 +303,7 @@ function list(t, opts, callback) {
 
     var client = opts.client || mod_client.get('fwapi');
     var params = opts.params || {};
-    var desc = fmt(' (params=%s)', params);
+    var desc = fmt(' (params=%s)', JSON.stringify(params));
 
     client.listRules(params, function (err, obj, req, res) {
         if (opts.expErr) {
@@ -350,7 +351,14 @@ function resolve(t, opts, callback) {
             return done(gErr, null, t, callback);
         }
 
-        client.post('/resolve', opts.params, function (err, obj, req, res) {
+        var postParams = {
+            headers: { 'x-request-id': mod_uuid.v4() },
+            path: '/resolve'
+        };
+        var reqID = postParams.headers['x-request-id'];
+        t.ok(reqID, 'x-request-id=' + reqID);
+
+        client.post(postParams, opts.params, function (err, obj, req, res) {
             if (opts.expErr) {
                 t.ok(err, 'expected error');
                 if (err) {
