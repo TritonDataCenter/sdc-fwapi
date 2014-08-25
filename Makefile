@@ -22,11 +22,13 @@ NODEUNIT		:= ./node_modules/.bin/nodeunit
 #
 # Files
 #
+BASH_FILES := bin/fwapi sbin/fwapid tools/restdown-header
 DOC_FILES	 = index.restdown examples.restdown rules.restdown architecture.restdown
 RESTDOWN_FLAGS   = --brand-dir=deps/restdown-brand-remora
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
+JSON_FILES	:= config.json.sample package.json
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
