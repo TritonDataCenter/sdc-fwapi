@@ -120,7 +120,7 @@ pkg: all $(SMF_MANIFESTS)
 		$(TOP)/test/runtest \
 		$(TOP)/test/runtests \
 		$(INSTDIR)/test/
-	cp -P smf/manifests/*.xml $(INSTDIR)/smf/manifests
+	cp smf/manifests/*.xml $(INSTDIR)/smf/manifests
 	cp -PR $(NODE_INSTALL) $(INSTDIR)/node
 	mkdir -p $(PKGDIR)/root/opt/smartdc/boot
 	cp -R $(TOP)/deps/sdc-scripts/* $(PKGDIR)/root/opt/smartdc/boot/
