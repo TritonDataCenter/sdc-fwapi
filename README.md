@@ -8,57 +8,97 @@
     Copyright (c) 2014, Joyent, Inc.
 -->
 
-# Firewall API
+# sdc-fwapi
 
-Repository: <git@git.joyent.com:fwapi.git>
-Browsing: <https://mo.joyent.com/fwapi>
-Who: Rob Gulewich
-Docs: <https://mo.joyent.com/docs/fwapi>
-Tickets/bugs: <https://devhub.joyent.com/jira/browse/FWAPI>
+This repository is part of the Joyent SmartDataCenter project (SDC).  For
+contribution guidelines, issues, and general documentation, visit the main
+[SDC](http://github.com/joyent/sdc) project page.
 
+The SDC Firewall API (FWAPI) allows managing firewall rules for VMs. These
+rules are high-level and written in a Domain-Specific Language. For more
+information on the rules and system design, see:
 
-# Overview
-
-This is the firewall API.
+* **docs/index.restdown** for an overview
+* **docs/architecture.restdown** for how rules are managed
+* The [sdc-fwrule repo](http://github.com/joyent/sdc-fwrule)
+* [examples.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/examples.md) and
+  [rules.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/rules.md)
+  in the sdc-fwrule repo
 
 
 # Repository
 
-    deps/           Git submodules and/or commited 3rd-party deps should go
-                    here. See "node_modules/" for node.js deps.
-    docs/           Project docs (restdown)
-    lib/            Source files.
-    node_modules/   Node.js deps, either populated at build time or commited.
-                    See Managing Dependencies.
-    pkg/            Package lifecycle scripts
-    smf/manifests   SMF manifests
-    smf/methods     SMF method scripts
-    test/           Test suite (using node-tap)
-    tools/          Miscellaneous dev/upgrade/deployment tools and data.
+    bin/                CLI tools
+    boot/               Shell scripts for booting and configuring the zone
+    deps/               Git submodules:
+    docs/               Project docs (restdown)
+    lib/                Source files.
+    node_modules/       node.js dependencies - not checked in, but installed
+                        with `npm install`
+    sapi_manifests/     Service API (SAPI) manifests
+    smf/manifests       SMF manifests
+    smf/methods         SMF method scripts
+    test/               Test suites (using nodeunit)
+        integration/    Integration tests (to be run in a deployed fwapi zone)
+        unit/           Unit tests (to be run in your development environment)
+    tools/              Miscellaneous dev tools
     Makefile
-    package.json    npm module info (holds the project version)
+    package.json        npm module info (holds the project version)
     README.md
+    server.js           API server point
 
 
 # Development
 
-To run fwapi:
+To get started:
 
-    git clone git@git.joyent.com:fwapi.git
-    cd fwapi
-    git submodule update --init
-    make all
-    cp config.json.sample config.json
-    node server.js
+    git clone git@github.com:joyent/sdc-fwapi.git
+    make
 
-To update the docs, edit "docs/index.restdown" and run `make docs`
-to update "docs/index.html".
+To update the docs, edit "docs/filename.restdown" and update "docs/index.html"
+by running:
+
+   make docs
+
+To run style and lint checks:
+
+    make check
+
+To run all checks and tests:
+
+    make prepush
 
 Before commiting/pushing run `make prepush` and, if possible, get a code
-review.
+review. For non-trivial changes, a unit or integration test that covers the
+new behaviour is required.
 
 
 # Testing
 
+## Unit tests
+
+To run all tests:
+
     make test
 
+To run an individual test:
+
+    ./test/runtest ./test/unit/testname.test.js
+
+## Integration tests
+
+To run the integration tests, on a **non-production** SDC server:
+
+    sdc-login fwapi
+    /opt/smartdc/fwapi/test/runtests
+
+Or to run an individual integration test:
+
+    /opt/smartdc/fwapi/test/runtest /opt/smartdc/fwapi/test/integration/testname.test.js
+
+Note that there are two types of integration tests:
+
+* Single-server tests end in **.test.js**, and can be run with only a single server in your
+  datacenter.
+* Multi-server tests end in **.mult-test.js**, and can only be run when there is more than
+  one server available in your datacenter.
