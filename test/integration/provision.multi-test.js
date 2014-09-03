@@ -137,6 +137,7 @@ exports['Provision VMs'] = function (t) {
     ];
     vms[0].tags[TAGS.dns] = true;
     vms[0].tags[TAGS.db] = 1;
+
     vms[1].tags[TAGS.ssh] = true;
     vms[1].tags[TAGS.db] = 2;
 

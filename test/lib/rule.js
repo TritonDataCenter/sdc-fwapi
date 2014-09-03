@@ -75,7 +75,7 @@ function create(t, opts, callback) {
     assert.optionalObject(opts.partialExp, 'opts.partialExp');
 
     var client = opts.client || mod_client.get('fwapi');
-    var desc = fmt(' (rule=%s)', opts.rule.rule);
+    var desc = fmt(' (creating rule=%s)', opts.rule.rule);
 
     LOG.debug({ rule: opts.rule }, 'creating rule');
     client.createRule(opts.rule, function (err, obj, req, res) {
@@ -248,6 +248,10 @@ function get(t, opts, callback) {
                 var code = opts.expCode || 422;
                 t.equal(err.statusCode, code, 'status code');
                 t.deepEqual(err.body, opts.expErr, 'error body');
+            }
+
+            if (obj && obj.rule) {
+                t.deepEqual(obj, {}, 'rule found when error expected');
             }
 
             return done(err, null, t, callback);

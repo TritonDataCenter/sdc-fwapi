@@ -30,17 +30,24 @@ var util = require('util');
 // plus setup and teardown
 var runOne;
 var NUM_OWNERS = 6;
+var NUM_VMS = 7;
 var OWNERS = [];
 var O_STR = [];
 var RULES = {};
-var VMS = [0, 1, 2, 3, 4].map(function () { return mod_uuid.v4(); });
+var VMS = [];
+for (var vi = 0; vi < NUM_VMS; vi++) {
+    VMS.push(mod_uuid.v4());
+}
+VMS.sort();
 
 
+// Create the owner strings (used to name tests to make debugging easier):
 for (var oi = 0; oi <= NUM_OWNERS; oi++) {
     var oUUID = mod_uuid.v4();
     OWNERS.push(oUUID);
     O_STR.push(fmt('OWNERS[%d] (%s): ', oi, oUUID));
 }
+
 
 
 // --- Helpers
@@ -164,6 +171,28 @@ exports.setup = function (t) {
                 owner_uuid: OWNERS[6],
                 rule: fmt('FROM vm %s TO (tag five = six OR tag three = four) '
                     + 'ALLOW udp PORT 58', VMS[3]),
+                enabled: true
+            },
+
+            ipToVm5: {
+                owner_uuid: OWNERS[6],
+                rule: fmt('FROM ip 10.1.2.5 TO vm %s ALLOW tcp PORT 80',
+                    VMS[5]),
+                enabled: true
+            },
+
+            vm6ToIp: {
+                owner_uuid: OWNERS[6],
+                rule: fmt('FROM vm %s TO ip 10.1.2.5 BLOCK tcp PORT 80',
+                    VMS[6]),
+                enabled: true
+            },
+
+            vmsOnBothSides: {
+                owner_uuid: OWNERS[6],
+                rule: fmt('FROM (ip 10.1.2.5 OR vm %s OR vm %s) TO '
+                    + '(ip 10.1.2.5 OR vm %s OR vm %s) ALLOW udp PORT 5432',
+                    VMS[5], VMS[6], VMS[5], VMS[6]),
                 enabled: true
             }
         }
@@ -362,7 +391,7 @@ exports['resolve'] = function (t) {
             vms: [ ]
         } ],
 
-    [   fmt('OWNERS[0] (%s): VM 0 (%s)', O_STR[0], VMS[0]),
+    [   fmt('%sVM 0 (%s)', O_STR[0], VMS[0]),
         {
             owner_uuid: OWNERS[0],
             vms: [ VMS[0] ]
@@ -472,6 +501,32 @@ exports['resolve'] = function (t) {
             rules: [ RULES.o6.vmToMultiTags ],
             tags: { },
             vms: [ VMS[3] ]
+        } ],
+
+    [   fmt('%sVM 5 (%s)', O_STR[0], VMS[5]),
+        {
+            owner_uuid: OWNERS[6],
+            vms: [ VMS[5] ]
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[6],
+            rules: [ RULES.o6.ipToVm5, RULES.o6.vmsOnBothSides ],
+            tags: { },
+            vms: [ VMS[5], VMS[6] ]
+        } ],
+
+    [   fmt('%sVM 6 (%s)', O_STR[0], VMS[6]),
+        {
+            owner_uuid: OWNERS[6],
+            vms: [ VMS[6] ]
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[6],
+            rules: [ RULES.o6.vm6ToIp, RULES.o6.vmsOnBothSides ],
+            tags: { },
+            vms: [ VMS[5], VMS[6] ]
         } ]
     ];
 

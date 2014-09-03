@@ -296,11 +296,15 @@ function getRule(t, opts, callback) {
         }
 
         if (opts.expErr) {
-            t.ok(err, 'expected error');
+            t.ok(err, 'expected error' + desc);
             if (err) {
                 var code = opts.expCode || 422;
                 t.equal(err.statusCode, code, 'status code');
                 t.deepEqual(err.body, opts.expErr, 'error body');
+            }
+
+            if (obj && obj.rule) {
+                t.deepEqual(obj, {}, 'rule found when error expected' + desc);
             }
 
             return done(err, null, t, callback);

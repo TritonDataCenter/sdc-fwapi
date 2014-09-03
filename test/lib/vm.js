@@ -243,25 +243,32 @@ function delOne(t, opts, callback) {
 function provision(t, opts, callback) {
     assert.object(t, 't');
     assert.object(opts, 'opts');
+    assert.arrayOfObject(opts.vms, 'opts.vms');
     assert.optionalFunc(callback, 'callback');
 
-    if (!opts.vms) {
-        opts.vms = [];
-    }
-    if (opts.vm) {
-        opts.vms.push(opts.vm);
+    var vms = opts.vms.map(function () { return {}; });
+    for (var v in opts.vms) {
+        opts.vms[v].vmNum = v;
     }
 
-    async.map(opts.vms, function (vm, cb) {
+    async.map(opts.vms, function (vmParams, cb) {
         var newOpts = clone(opts);
-        newOpts.vm = vm;
-        provisionOne(t, newOpts, cb);
+        newOpts.vm = vmParams;
+
+        provisionOne(t, newOpts, function (err, vm) {
+            if (vm) {
+                // Make sure we stick this VM back in its proper spot in the
+                // vms array that we're returning:
+                vms[vmParams.vmNum] = vm;
+            }
+
+            return cb();
+        });
     }, function (err, res) {
         if (err) {
             return done(err, null, t, callback);
         }
 
-        var vms = res.filter(function (v) { return (v && v !== null); });
         LOG.info({ vms: vms }, 'provisioned VMs');
 
         // Log information about the VMs and make sure we provisioned
@@ -275,7 +282,7 @@ function provision(t, opts, callback) {
 
             if (vms[i]) {
                 t.ok(vms[i].server_uuid, fmt('VM %d uuid=%s, server_uuid=%s',
-                    vms[i].uuid, vms[i].server_uuid));
+                    i, vms[i].uuid, vms[i].server_uuid));
                 if (inVm.server_uuid) {
                     t.equal(vms[i].server_uuid, inVm.server_uuid,
                         fmt('VM %d server_uuid is correct', i));

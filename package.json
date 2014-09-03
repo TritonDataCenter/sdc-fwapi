@@ -1,13 +1,12 @@
 {
   "name": "fwapi",
   "description": "Firewall API for Smart DataCenter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Joyent",
   "private": true,
   "devDependencies": {
     "ldapjs": "0.6.3",
-    "mockery": "1.4.0",
-    "nodeunit": "git://github.com/rgulewich/nodeunit.git#80a3876"
+    "mockery": "1.4.0"
   },
   "dependencies": {
     "assert-plus": "0.1",
@@ -19,14 +18,12 @@
     "fast-stream": "git+ssh://git@github.com:joyent/sdc-fast-stream.git#893d59d",
     "fwrule": "git+ssh://git@github.com:joyent/sdc-fwrule.git#5cbf20b",
     "moray": "git+ssh://git@github.com:joyent/node-moray.git#72b53a3",
+    "nodeunit": "0.9.0",
     "node-uuid": "1.2.0",
     "sdc-clients": "git+ssh://git@github.com:joyent/node-sdc-clients.git#82a0e12",
     "restify": "git+ssh://git@github.com:mcavage/node-restify.git#0d7b4ba",
     "vasync": "1.3",
     "verror": "1.3"
-  },
-  "scripts": {
-    "test": "./node_modules/.bin/tap ./test/*.js"
   },
   "license": "MPL-2.0"
 }
