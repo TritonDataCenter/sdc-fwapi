@@ -58,7 +58,7 @@ To get started:
 To update the docs, edit "docs/filename.restdown" and update "docs/index.html"
 by running:
 
-   make docs
+    make docs
 
 To run style and lint checks:
 
