@@ -25,6 +25,7 @@ NODEUNIT		:= ./node_modules/.bin/nodeunit
 BASH_FILES := bin/fwapi sbin/fwapid tools/restdown-header
 DOC_FILES	 = index.restdown examples.restdown rules.restdown architecture.restdown
 RESTDOWN_FLAGS   = --brand-dir=deps/restdown-brand-remora
+EXTRA_DOC_DEPS	= deps/restdown-brand-remora/.git
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
