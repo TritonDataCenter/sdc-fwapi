@@ -83,15 +83,15 @@ node_modules/fwrule: | $(NPM_EXEC)
 node_modules/fwrule/docs/rules.md: node_modules/fwrule
 node_modules/fwrule/docs/examples.md: node_modules/fwrule
 
-docs/rules.restdown: node_modules/fwrule/docs/rules.md
-	$(TOP)/tools/restdown-header "Firewall API Rule Syntax" > docs/rules.restdown
-	cat node_modules/fwrule/docs/rules.md >> docs/rules.restdown
+docs/rules.md: node_modules/fwrule/docs/rules.md
+	$(TOP)/tools/restdown-header "Firewall API Rule Syntax" > docs/rules.md
+	cat node_modules/fwrule/docs/rules.md >> docs/rules.md
 
-docs/examples.restdown: node_modules/fwrule/docs/examples.md
-	$(TOP)/tools/restdown-header "Firewall API Examples" > docs/examples.restdown
-	cat node_modules/fwrule/docs/examples.md >> docs/examples.restdown
+docs/examples.md: node_modules/fwrule/docs/examples.md
+	$(TOP)/tools/restdown-header "Firewall API Examples" > docs/examples.md
+	cat node_modules/fwrule/docs/examples.md >> docs/examples.md
 
-CLEAN_FILES += ./node_modules $(BUILD)/docs docs/examples.restdown docs/rules.restdown
+CLEAN_FILES += ./node_modules $(BUILD)/docs docs/examples.md docs/rules.md
 
 
 #
