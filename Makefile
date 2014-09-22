@@ -23,7 +23,7 @@ NODEUNIT		:= ./node_modules/.bin/nodeunit
 # Files
 #
 BASH_FILES := bin/fwapi sbin/fwapid tools/restdown-header
-DOC_FILES	 = index.restdown examples.restdown rules.restdown architecture.restdown
+DOC_FILES	 = index.md examples.md rules.md architecture.md
 RESTDOWN_FLAGS   = --brand-dir=deps/restdown-brand-remora
 EXTRA_DOC_DEPS	= deps/restdown-brand-remora/.git
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')

@@ -1,6 +1,6 @@
 ---
 title: Firewall API Architecture and Troubleshooting
-markdown2extras: wiki-tables, cuddled-lists
+markdown2extras: tables, cuddled-lists
 apisections:
 ---
 <!--

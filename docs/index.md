@@ -1,6 +1,6 @@
 ---
 title: Firewall API (FWAPI)
-markdown2extras: wiki-tables, code-friendly
+markdown2extras: tables, code-friendly
 apisections: Rules, Firewalls
 ---
 <!--
@@ -152,12 +152,13 @@ Returns a list of all rules.
 All inputs are optional filters on the list. Adding these filters will
 match rules with these targets in either the FROM or TO side of the rule.
 
-||**Field**||**Type**||**Description**||
-||ip||String||IP||
-||owner_uuid||UUID||Owner UUID||
-||subnet||String||Subnet CIDR||
-||tag||String||tag||
-||vm||UUID||VM UUID||
+| Field      | Type   | Description |
+| ---------- | ------ | ----------- |
+| ip         | String | IP          |
+| owner_uuid | UUID   | Owner UUID  |
+| subnet     | String | Subnet CIDR |
+| tag        | String | tag         |
+| vm         | UUID   | VM UUID     |
 
 ### Example: list all rules belonging to the admin owner_uuid
 
@@ -188,8 +189,9 @@ match rules with these targets in either the FROM or TO side of the rule.
 
 Returns a rule.
 
-||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||If set, will not return the rule unless its owner_uuid matches (optional)||
+| Field      | Type | Description                                                               |
+| ---------- | ---- | ------------------------------------------------------------------------- |
+| owner_uuid | UUID | If set, will not return the rule unless its owner_uuid matches (optional) |
 
 ### Example: get a rule
 
@@ -211,12 +213,13 @@ Modifies a rule.
 
 ### Inputs
 
-||**Field**||**Type**||**Description**||
-||description||String||Rule description (optional)||
-||enabled||Boolean||Whether or not the rule is enabled (optional, default: false)||
-||global||Boolean||Whether or not the rule is global (optional)||
-||owner_uuid||UUID||Owner UUID of the rule (optional)||
-||rule||String||The firewall rule (see the [rule syntax guide](rules.html)) (optional)||
+| Field       | Type    | Description                                                            |
+| ----------- | ------- | ---------------------------------------------------------------------- |
+| description | String  | Rule description (optional)                                            |
+| enabled     | Boolean | Whether or not the rule is enabled (optional, default: false)          |
+| global      | Boolean | Whether or not the rule is global (optional)                           |
+| owner_uuid  | UUID    | Owner UUID of the rule (optional)                                      |
+| rule        | String  | The firewall rule (see the [rule syntax guide](rules.html)) (optional) |
 
 *Note:* One of global or owner_uuid is required.
 
@@ -241,8 +244,9 @@ Returns the VMs affected by a rule.
 
 ### Inputs
 
-||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID to filter VMs by||
+| Field      | Type | Description                 |
+| ---------- | ---- | --------------------------- |
+| owner_uuid | UUID | Owner UUID to filter VMs by |
 
 ### Example: get the UUIDs of VMs affected by a rule
 
@@ -257,12 +261,13 @@ Creates a rule.
 
 ### Inputs
 
-||**Field**||**Type**||**Description**||
-||description||String||Rule description (optional)||
-||enabled||Boolean||Whether or not the rule is enabled (optional, default: false)||
-||global||Boolean||Whether or not the rule is global (optional)||
-||owner_uuid||UUID||Owner UUID of the rule (optional)||
-||rule||String||The firewall rule (see the [rule syntax guide](rules.html)) (optional)||
+| Field       | Type    | Description                                                            |
+| ----------- | ------- | ---------------------------------------------------------------------- |
+| description | String  | Rule description (optional)                                            |
+| enabled     | Boolean | Whether or not the rule is enabled (optional, default: false)          |
+| global      | Boolean | Whether or not the rule is global (optional)                           |
+| owner_uuid  | UUID    | Owner UUID of the rule (optional)                                      |
+| rule        | String  | The firewall rule (see the [rule syntax guide](rules.html)) (optional) |
 
 *Note:* One of global or owner_uuid is required.
 
@@ -290,8 +295,9 @@ Deletes a rule.
 
 ### Inputs
 
-||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||If set, will not delete the rule unless its owner_uuid matches (optional)||
+| Field      | Type | Description                                                               |
+| ---------- | ---- | ------------------------------------------------------------------------- |
+| owner_uuid | UUID | If set, will not delete the rule unless its owner_uuid matches (optional) |
 
 ### Example: delete a rule
 
@@ -313,8 +319,9 @@ Returns the rules that apply to a VM.
 
 ### Inputs
 
-||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule (optional)||
+| Field      | Type | Description                       |
+| ---------- | ---- | --------------------------------- |
+| owner_uuid | UUID | Owner UUID of the rule (optional) |
 
 ### Example: get the rules that apply to VM 2ca7d243-215f-41d7-a8ed-c83e4712a8bf
 
@@ -359,10 +366,11 @@ For a given set of VMs that have a certain set of tags,
 
 ### Inputs
 
-||**Field**||**Type**||**Description**||
-||owner_uuid||UUID||Owner UUID of the rule (required)||
-||vms||Array of UUIDs||VM UUIDs to query (optional)||
-||tags||Object||Tag key / values to query (optional)||
+| Field      | Type           | Description                          |
+| ---------- | -------------- | ------------------------------------ |
+| owner_uuid | UUID           | Owner UUID of the rule (required)    |
+| vms        | Array of UUIDs | VM UUIDs to query (optional)         |
+| tags       | Object         | Tag key / values to query (optional) |
 
 ### Example: get the rules that apply to VM 2ca7d243-215f-41d7-a8ed-c83e4712a8bf
 
