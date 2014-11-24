@@ -110,10 +110,11 @@ pkg: all $(SMF_MANIFESTS)
 	@touch $(PKGDIR)/site/.do-not-delete-me
 	cp -r $(TOP)/server.js \
 		$(TOP)/bin \
-		$(TOP)/sbin \
 		$(TOP)/lib \
 		$(TOP)/node_modules \
+		$(TOP)/package.json \
 		$(TOP)/sapi_manifests \
+		$(TOP)/sbin \
 		$(INSTDIR)/
 	cp -r $(TOP)/test/bin \
 		$(TOP)/test/integration \
