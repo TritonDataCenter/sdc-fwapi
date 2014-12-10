@@ -19,37 +19,27 @@ var VError = require('verror').VError;
 
 
 
+// --- Internal
+
+
+
+function apiConfig(apiName) {
+    return {
+        agent: false,
+        url: config.test[apiName + '_url']
+    };
+}
+
+
+
 // --- Exports
 
 
 
 var CFG_ERR;
 var testFile = path.join(path.resolve(__dirname, '..'), 'config.json');
-var fwapiFile = path.join(path.resolve(__dirname, '..', '..'), 'config.json');
-
-var fwapiCfg = JSON.parse(fs.readFileSync(fwapiFile).toString());
-var config = {
-    package: fwapiCfg
-};
+var config = {};
 var HAVE_VARS;
-
-config.vmapi = fwapiCfg.vmapi;
-config.vmapi.agent = false;
-
-config.fwapi = {
-    agent: false,
-    url: fwapiCfg.vmapi.url.replace('vmapi', 'fwapi')
-};
-
-config.napi = {
-    agent: false,
-    url: fwapiCfg.vmapi.url.replace('vmapi', 'napi')
-};
-
-config.wfapi = {
-    agent: false,
-    url: fwapiCfg.vmapi.url.replace('vmapi', 'workflow')
-};
 
 try {
     config.test = JSON.parse(fs.readFileSync(testFile).toString());
@@ -57,6 +47,11 @@ try {
     console.error('# Error loading test config %s: %s', testFile, err.message);
     config.test = {};
 }
+
+config.fwapi = apiConfig('fwapi');
+config.napi = apiConfig('napi');
+config.vmapi = apiConfig('vmapi');
+config.wfapi = apiConfig('wfapi');
 
 config.haveTestVars = function haveTestVars(vars, callback) {
     if (CFG_ERR) {

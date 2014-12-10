@@ -10,7 +10,7 @@
 #
 
 #
-# Generate config.json for running multi-server integration tests.
+# Generate test/config.json for running multi-server integration tests.
 
 if [ "$TRACE" != "" ]; then
     export PS4='${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -30,16 +30,17 @@ function fatal
     exit 1
 }
 
-
-
-#---- mainline
+#---- main
 
 dir=$(unset CDPATH; cd $(dirname $0); pwd)
 test_dir=$(unset CDPATH; cd $(dirname $0)/..; pwd)
 json_file=${test_dir}/config.json
+json_in_file=${test_dir}/config.json.in
 vmapi_url=$(json -f /opt/smartdc/fwapi/config.json vmapi.url)
 imgapi_url=${vmapi_url//vmapi/imgapi}
 cnapi_url=${vmapi_url//vmapi/cnapi}
+
+[[ -z ${vmapi_url} ]] && fatal "Could not get vmapi URL from fwapi's config.json"
 
 image_uuid=$(curl -sS ${imgapi_url}/images'?name=sdc-smartos' | json 0.uuid)
 [[ -z ${image_uuid} ]] && fatal "Could not find an image named sdc-smartos in IMGAPI"
@@ -53,11 +54,11 @@ servers=( $(curl -sS ${cnapi_url}/servers | json -a uuid setup | grep true | awk
 ${dir}/add-test-user
 
 echo "Writing multi-server test config: ${json_file}"
-cat - >${json_file} <<JSON
-{
-  "provision_image": "${image_uuid}",
-  "owner_uuid": "4917d426-2097-42f7-9303-b1968cd7bb3e",
-  "server1_uuid": "${servers[0]}",
-  "server2_uuid": "${servers[1]}"
-}
-JSON
+sed -e "s,{{PROVISION_IMAGE}},${image_uuid}," \
+    -e "s,{{SERVER1_UUID}},${servers[0]}," \
+    -e "s,{{SERVER2_UUID}},${servers[1]}," \
+    -e "s,{{FWAPI_URL}},${vmapi_url//vmapi/fwapi}," \
+    -e "s,{{NAPI_URL}},${vmapi_url//vmapi/napi}," \
+    -e "s,{{VMAPI_URL}},${vmapi_url}," \
+    -e "s,{{WFAPI_URL}},${vmapi_url//vmapi/wfapi}," \
+    ${json_in_file} > ${json_file}

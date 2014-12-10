@@ -1,0 +1,13 @@
+{
+    "api_poll_interval": 500,
+    "firewaller_check_timeout": 5000,
+    "fwapi_url": "{{FWAPI_URL}}",
+    "napi_url": "{{NAPI_URL}}",
+    "owner_uuid": "4917d426-2097-42f7-9303-b1968cd7bb3e",
+    "provision_image": "{{PROVISION_IMAGE}}",
+    "provision_timeout": 300000,
+    "server1_uuid": "{{SERVER1_UUID}}",
+    "server2_uuid": "{{SERVER2_UUID}}",
+    "vmapi_url": "{{VMAPI_URL}}",
+    "wfapi_url": "{{WFAPI_URL}}"
+}

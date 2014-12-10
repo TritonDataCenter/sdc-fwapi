@@ -117,6 +117,7 @@ pkg: all $(SMF_MANIFESTS)
 		$(TOP)/sbin \
 		$(INSTDIR)/
 	cp -r $(TOP)/test/bin \
+		$(TOP)/test/config.json.in \
 		$(TOP)/test/integration \
 		$(TOP)/test/lib \
 		$(TOP)/test/runtest \

@@ -25,12 +25,14 @@ information on the rules and system design, see:
   [rules.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/rules.md)
   in the sdc-fwrule repo
 
+The contents of this repo are bundled up into an image that is then provisioned
+as the fwapi zone in SDC.
 
 # Repository
 
     bin/                CLI tools
     boot/               Shell scripts for booting and configuring the zone
-    deps/               Git submodules:
+    deps/               Git submodules
     docs/               Project docs (restdown)
     lib/                Source files.
     node_modules/       node.js dependencies - not checked in, but installed
@@ -45,7 +47,7 @@ information on the rules and system design, see:
     Makefile
     package.json        npm module info (holds the project version)
     README.md
-    server.js           API server point
+    server.js           API server main entry point
 
 
 # Development
@@ -55,8 +57,8 @@ To get started:
     git clone git@github.com:joyent/sdc-fwapi.git
     make
 
-To update the docs, edit "docs/filename.restdown" and update "docs/index.html"
-by running:
+To update the docs, edit "docs/index.md", then check that
+"docs/index.html" gets updated properly by running:
 
     make docs
 

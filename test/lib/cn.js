@@ -15,6 +15,7 @@
 var assert = require('assert-plus');
 var clone = require('clone');
 var common = require('./common');
+var config = require('./config');
 var done = common.done;
 var ifErr = common.ifErr;
 var fmt = require('util').format;
@@ -35,8 +36,8 @@ var NOT_FOUND_ERR = {
     code: 'ResourceNotFound',
     message: 'rule not found'
 };
-var POLL_INTERVAL = 500;
-var POLL_TIMEOUT = 5000;
+var POLL_INTERVAL = config.test.api_poll_interval;
+var POLL_TIMEOUT = config.test.firewaller_check_timeout;
 var RVM_NOT_FOUND_ERR = {
     code: 'ResourceNotFound',
     message: 'remote VM not found'
@@ -363,11 +364,13 @@ function getRVM(t, opts, callback) {
         }
 
         if (opts.expErr) {
-            t.ok(err, 'expected error');
+            t.ok(err, 'expected error' + desc);
             if (err) {
                 var code = opts.expCode || 422;
                 t.equal(err.statusCode, code, 'status code');
                 t.deepEqual(err.body, opts.expErr, 'error body');
+            } else if (obj) {
+                t.deepEqual(obj, {}, 'body is not an error' + desc);
             }
 
             return done(err, null, t, callback);

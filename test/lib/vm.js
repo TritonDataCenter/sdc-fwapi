@@ -39,8 +39,10 @@ var VM_PARAMS = {
 };
 var VM_NUM = 0;
 var LOG = mod_log.child({ component: 'vm' });
-var POLL_INTERVAL = 500;
+var POLL_INTERVAL = config.test.api_poll_interval;
+var PROV_TIMEOUT = config.test.provision_timeout;
 var VMS = {};
+
 
 
 // --- Internal
@@ -71,6 +73,7 @@ function provisionOne(t, opts, callback) {
 
         LOG.info({ vm: opts.vm, vm_uuid: job.vm_uuid, job_uuid: job.job_uuid },
             'waiting for VM to provision');
+        var startTime = Date.now();
         /*jsl:ignore*/
         var timeout;
         /*jsl:end*/
@@ -97,6 +100,18 @@ function provisionOne(t, opts, callback) {
 
                     return callback(new VError(
                         'failed to provision VM %s (job %s)',
+                        job.vm_uuid, job.job_uuid));
+                }
+
+                if (Date.now() - startTime > PROV_TIMEOUT) {
+                    LOG.error({
+                        job_uuid: job.job_uuid,
+                        params: vmParams,
+                        vm_uuid: job.vm_uuid
+                    }, 'timeout provisioning VM');
+
+                    return callback(new VError(
+                        'provision of VM %s (job %s) timed out',
                         job.vm_uuid, job.job_uuid));
                 }
 
