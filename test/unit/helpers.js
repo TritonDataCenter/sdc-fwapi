@@ -90,8 +90,6 @@ function createClientAndServer(callback) {
     });
     mocks._LOGGER = log;
 
-    // XXX: remove this
-    server.ufds = new mocks['sdc-clients'].UFDS;
     // XXX: replace with a real mock
     server.vmapi = {};
 

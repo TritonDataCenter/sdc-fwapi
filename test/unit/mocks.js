@@ -37,7 +37,7 @@ function fakeUFDSclient() {
     var self = this;
     EventEmitter.call(this);
     process.nextTick(function () {
-        self.emit('ready');
+        self.emit('connect');
     });
 }
 
@@ -121,9 +121,10 @@ module.exports = {
     moray: mockMoray,
 
     'sdc-clients': {
-        UFDS: fakeUFDSclient,
         VMAPI: fakeVMAPIclient
     },
+
+    ufds: fakeUFDSclient,
 
     // -- mock data
     set _LOGGER(val) {
