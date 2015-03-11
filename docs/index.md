@@ -86,9 +86,8 @@ Important things to remember:
 * Firewall rules only affect a VM if it has the **firewall_enabled**
   property set to **true**.
 * Updating tags on the VMs will affect what rules are applied to the VM.
-* **FWAPI firewall rules only work with SmartOS VMs.**  KVM VMs are **not**
-  supported yet.
-
+* FWAPI firewall rules only work on **KVM** VMs running on server platform_version newer than **20140314**.
+* FWAPI firewall rules work on all SmartOS VMs.
 
 ## An Example
 
