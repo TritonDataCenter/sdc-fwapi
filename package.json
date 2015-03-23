@@ -1,7 +1,7 @@
 {
   "name": "fwapi",
   "description": "Firewall API for Smart DataCenter",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Joyent",
   "private": true,
   "devDependencies": {
@@ -11,7 +11,7 @@
   "dependencies": {
     "assert-plus": "0.1",
     "async": "0.1",
-    "bunyan": "0.22.1",
+    "bunyan": "1.2.3",
     "clone": "0.1",
     "cmdln": "1.1.1",
     "extsprintf": "1.0.2",
