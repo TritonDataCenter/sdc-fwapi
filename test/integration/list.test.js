@@ -13,6 +13,8 @@
  */
 
 var async = require('async');
+var constants = require('../../lib/util/constants');
+var extend = require('xtend');
 var h = require('./helpers');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
@@ -28,6 +30,7 @@ var util = require('util');
 // plus setup and teardown
 var runOne;
 var OWNERS = [
+    mod_uuid.v4(),
     mod_uuid.v4()
 ];
 var RULES = [
@@ -51,6 +54,25 @@ var RULES = [
         enabled: true,
         owner_uuid: OWNERS[0],
         rule: 'FROM subnet 10.3.1.0/24 TO all vms ALLOW tcp PORT 5002'
+    },
+
+    // OWNERS[1]
+
+    {
+        enabled: true,
+        owner_uuid: OWNERS[1],
+        rule: 'FROM subnet 10.2.1.0/24 TO all vms ALLOW tcp PORT 5001'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[1],
+        rule: 'FROM tag foo TO all vms BLOCK udp PORT all'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[1],
+        rule: 'FROM (tag foo = bar OR tag foo = baz) '
+            + 'TO tag side = two ALLOW tcp (PORT 5003 AND PORT 5004)'
     }
 ];
 
@@ -60,59 +82,92 @@ var RULES = [
 
 
 
-exports['Add rules'] = {
-
-    'rule 0': function (t) {
-        mod_rule.createAndGet(t, {
-            rule: RULES[0],
-            exp: RULES[0]
-        });
-    },
-
-    'rule 1': function (t) {
-        mod_rule.createAndGet(t, {
-            rule: RULES[1],
-            exp: RULES[1]
-        });
-    },
-
-    'rule 2': function (t) {
-        mod_rule.createAndGet(t, {
-            rule: RULES[2],
-            exp: RULES[2]
-        });
-    },
-
-    'rule 3': function (t) {
-        mod_rule.createAndGet(t, {
-            rule: RULES[3],
-            exp: RULES[3]
+exports.setup = {
+    'add all rules': function (t) {
+        mod_rule.createAndGetN(t, {
+            rules: RULES
         });
     }
-
 };
 
 
-exports['List: subnet 10.2.1.0/24'] = function (t) {
+exports['list: subnet 10.2.1.0/24'] = function (t) {
     mod_rule.list(t, {
         params: {
+            owner_uuid: OWNERS[0],
             subnet: '10.2.1.0/24'
         },
         exp: [
             RULES[1],
             RULES[2]
+            // Should *not* match RULES[4], which is owned by OWNERS[1]
         ]
     });
 };
 
 
-exports['List: subnet 10.3.1.0/24'] = function (t) {
+exports['list: subnet 10.3.1.0/24'] = function (t) {
     mod_rule.list(t, {
         params: {
+            owner_uuid: OWNERS[0],
             subnet: '10.3.1.0/24'
         },
         exp: [
             RULES[3]
+        ]
+    });
+};
+
+
+exports['list: parsed fields'] = function (t) {
+    mod_rule.list(t, {
+        params: {
+            owner_uuid: OWNERS[1],
+            fields: constants.PARSED_FIELDS
+        },
+        exp: [
+            extend(RULES[4], {
+                parsed: {
+                    action: 'allow',
+                    fromtags: {},
+                    protocol: 'tcp',
+                    ports: [ 5001 ],
+                    totags: {}
+                }
+            }),
+            extend(RULES[5], {
+                parsed: {
+                    action: 'block',
+                    fromtags: {
+                        foo: {
+                            all: true,
+                            values: []
+                        }
+                    },
+                    protocol: 'udp',
+                    ports: [ 'all' ],
+                    totags: {}
+                }
+            }),
+            extend(RULES[6], {
+                parsed: {
+                    action: 'allow',
+                    fromtags: {
+                        foo: {
+                            all: false,
+                            values: [ 'bar', 'baz' ]
+                        }
+                    },
+                    protocol: 'tcp',
+                    ports: [ 5003, 5004 ],
+                    totags: {
+                        side: {
+                            all: false,
+                            values: [ 'two' ]
+                        }
+                    }
+                }
+            })
         ]
     });
 };

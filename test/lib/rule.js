@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2015, Joyent, Inc.
  */
 
 /*
@@ -22,6 +22,7 @@ var ifErr = common.ifErr;
 var mod_client = require('./client');
 var mod_uuid = require('node-uuid');
 var mod_log = require('./log');
+var mod_vasync = require('vasync');
 
 
 
@@ -134,6 +135,38 @@ function createAndGet(t, opts, callback) {
 
         opts.uuid = res.uuid;
         return get(t, opts, callback);
+    });
+}
+
+
+/**
+ * Create and get an array of rules
+ */
+function createAndGetNrules(t, opts, callback) {
+    assert.object(t, 't');
+    assert.object(opts, 'opts');
+    assert.arrayOfObject(opts.rules, 'opts.rules');
+
+    var created = [];
+
+    mod_vasync.forEachParallel({
+        inputs: opts.rules,
+        func: function _addRule(rule, cb) {
+            var createOpts = {
+                exp: rule,
+                rule: rule
+            };
+
+            createAndGet(t, createOpts, function _afterCreate(err, res) {
+                if (res) {
+                    created.push(res);
+                }
+
+                return cb(err, res);
+            });
+        }
+    }, function (err) {
+        return done(err, created, t, callback);
     });
 }
 
@@ -304,7 +337,7 @@ function get(t, opts, callback) {
 /**
  * List firewall rules
  */
-function list(t, opts, callback) {
+function listRules(t, opts, callback) {
     assert.object(t, 't');
     assert.object(opts, 'opts');
     assert.optionalFunc(callback, 'callback');
@@ -334,7 +367,9 @@ function list(t, opts, callback) {
         }
 
         if (opts.exp) {
-            t.deepEqual(obj, opts.exp, 'full result' + desc);
+            t.deepEqual(obj.sort(common.uuidSort),
+                clone(opts.exp).sort(common.uuidSort),
+                'full result' + desc);
         }
 
         return done(null, obj, t, callback);
@@ -555,11 +590,12 @@ module.exports = {
     },
     create: create,
     createAndGet: createAndGet,
+    createAndGetN: createAndGetNrules,
     del: del,
     delAllCreated: delAllCreated,
     delAndGet: delAndGet,
     get: get,
-    list: list,
+    list: listRules,
     update: update,
     updateAndGet: updateAndGet,
     resolve: resolve,

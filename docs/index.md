@@ -10,7 +10,7 @@ apisections: Rules, Firewalls
 -->
 
 <!--
-    Copyright (c) 2014, Joyent, Inc.
+    Copyright (c) 2015, Joyent, Inc.
 -->
 
 # FWAPI (Firewall API)
@@ -142,24 +142,37 @@ Rules are written in a Doman Specific Language (DSL). References for it are:
 These endpoints manage firewall rules.
 
 
-## GET /rules
+## ListRules (GET /rules)
 
 Returns a list of all rules.
 
 ### Inputs
 
-All inputs are optional filters on the list. Adding these filters will
-match rules with these targets in either the FROM or TO side of the rule.
+All inputs are optional.  Fields with *Filter* in the description will filter
+the rules returned.  They will match rules with these targets in either the
+FROM or TO side of the rule.
 
-| Field      | Type   | Description |
-| ---------- | ------ | ----------- |
-| ip         | String | IP          |
-| owner_uuid | UUID   | Owner UUID  |
-| subnet     | String | Subnet CIDR |
-| tag        | String | tag         |
-| vm         | UUID   | VM UUID     |
+| Field      | Type             | Description                    |
+| ---------- | ---------------- | ------------------------------ |
+| fields     | Array of Strings | List of extra fields to return |
+| ip         | String           | Filter: IP                     |
+| owner_uuid | UUID             | Filter: Owner UUID             |
+| subnet     | String           | Filter: Subnet CIDR            |
+| tag        | String           | Filter: Tag                    |
+| vm         | UUID             | Filter: VM UUID                |
 
-### Example: list all rules belonging to the admin owner_uuid
+The `fields` parameter controls additional fields that will be returned.
+Valid fields are:
+
+| Field           | Description                                                    |
+| --------------- | -------------------------------------------------------------- |
+| parsed.action   | The rule's action: `block` or `allow` (in the `parsed` object) |
+| parsed.ports    | Ports the rule affects (in the `parsed` object)                |
+| parsed.protocol | Rule protocol (in the `parsed` object)                         |
+| parsed.tags     | Rule tags (in the `parsed` object)                             |
+
+
+### Example: list all rules belonging to a specific owner_uuid
 
     GET /rules
         -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
@@ -184,7 +197,7 @@ match rules with these targets in either the FROM or TO side of the rule.
     ]
 
 
-## GET /rules/:uuid
+## GetRule (GET /rules/:uuid)
 
 Returns a rule.
 
@@ -206,7 +219,7 @@ Returns a rule.
     }
 
 
-## PUT /rules/:uuid
+## UpdateRule (PUT /rules/:uuid)
 
 Modifies a rule.
 
@@ -237,7 +250,7 @@ Modifies a rule.
     }
 
 
-## GET /rules/:uuid/vms
+## GetRuleVMs (GET /rules/:uuid/vms)
 
 Returns the VMs affected by a rule.
 
@@ -254,7 +267,7 @@ Returns the VMs affected by a rule.
         2ca7d243-215f-41d7-a8ed-c83e4712a8bf
 
 
-## POST /rules
+## CreateRule (POST /rules)
 
 Creates a rule.
 
@@ -288,7 +301,7 @@ Creates a rule.
     }
 
 
-## DELETE /rules/:uuid
+## DeleteRule (DELETE /rules/:uuid)
 
 Deletes a rule.
 
@@ -312,7 +325,7 @@ Deletes a rule.
 These endpoints display the firewall rules that apply to VMs.
 
 
-## GET /firewalls/vms/:uuid
+## GetVMrules (GET /firewalls/vms/:uuid)
 
 Returns the rules that apply to a VM.
 
@@ -351,7 +364,7 @@ Returns the rules that apply to a VM.
 This is an internal API endpoint used by the firewaller agent to fetch
 rules from the API.  **Its interface is unstable and for internal use only.**
 
-## POST /resolve
+## Resolve (POST /resolve)
 
 This endpoint is used by the firewaller agent to fetch rules and assist with
 determining which remote VMs need to be transfered to a Compute Node.  It is
@@ -444,14 +457,18 @@ something).
 
 ## 2013-03-01
 
-  * Added /rules/:uuid/vms endpoint.
-  * Added /firewalls/vms/:uuid endpoint.
+- Added [GetVMrules](#GetVMrules) endpoint.
+- Added [GetRuleVMs](#GetRuleVMs) endpoint.
 
 ## 2013-12-12
 
-  * /rules/:uuid/vms: owner_uuid is no longer optional.
+- [GetRuleVMs](#GetRuleVMs): `owner_uuid` is no longer optional.
 
 ## 2013-12-16
 
-  * POST /rules/:uuid and PUT /rules/:uuid now require the global parameter
-    if owner_uuid is not set.
+- [CreateRule](#CreateRule) and [UpdateRule](#UpdateRule) now require the
+  `global` parameter if `owner_uuid` is not set.
+
+## 2015-03-23
+
+- Added `fields` option to the [ListRules](#ListRules) endpoint.
