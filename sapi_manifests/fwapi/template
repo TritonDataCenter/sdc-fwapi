@@ -5,6 +5,9 @@
   "fast": {
     "port": 2020
   },
+{{#experimental_fluentd_host}}
+  "fluentd_host": "{{{experimental_fluentd_host}}}",
+{{/experimental_fluentd_host}}
   "moray": {
     "host": "{{{MORAY_SERVICE}}}",
     "logLevel": "info",
