@@ -19,7 +19,7 @@
     "fast-stream": "git+ssh://git@github.com:joyent/sdc-fast-stream.git#893d59d",
     "fwrule": "git+ssh://git@github.com:joyent/sdc-fwrule.git#1481565",
     "moray": "git+ssh://git@github.com:joyent/node-moray.git#441fd44",
-    "nodeunit": "0.9.0",
+    "nodeunit": "0.9.1",
     "node-uuid": "1.2.0",
     "sdc-clients": "git+ssh://git@github.com:joyent/node-sdc-clients.git#5b10072",
     "ufds": "git+ssh://git@github.com:joyent/node-ufds.git#a7c674b76696fe7ab0fff1e2486f20d3af6a0d1a",
