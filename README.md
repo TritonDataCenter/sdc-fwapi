@@ -18,8 +18,8 @@ The SDC Firewall API (FWAPI) allows managing firewall rules for VMs. These
 rules are high-level and written in a Domain-Specific Language. For more
 information on the rules and system design, see:
 
-* **docs/index.restdown** for an overview
-* **docs/architecture.restdown** for how rules are managed
+* **docs/index.md** for an overview
+* **docs/architecture.md** for how rules are managed
 * The [sdc-fwrule repo](http://github.com/joyent/sdc-fwrule)
 * [examples.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/examples.md) and
   [rules.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/rules.md)
