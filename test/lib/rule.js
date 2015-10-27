@@ -272,9 +272,10 @@ function get(t, opts, callback) {
     assert.optionalObject(opts.rule, 'opts.rule');
 
     var client = opts.client || mod_client.get('fwapi');
+    var params = opts.params || {};
     var desc = fmt(' (uuid=%s)', opts.uuid);
 
-    client.getRule(opts.uuid, function (err, obj, req, res) {
+    client.getRule(opts.uuid, params, function (err, obj, req, res) {
         if (opts.expErr) {
             t.ok(err, 'expected error');
             if (err) {
