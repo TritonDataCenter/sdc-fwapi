@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2015, Joyent, Inc.
  */
 
 /*
@@ -40,6 +40,11 @@ function loadConfig(configFile) {
     var config = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
     if (!config.hasOwnProperty('port')) {
         config.port = 80;
+    }
+    if (config.hasOwnProperty('fwrule_version')) {
+        assert.number(config.fwrule_version, 'config.fwrule_version');
+    } else {
+        config.fwrule_version = 1;
     }
 
     assert.optionalNumber(config.maxHttpSockets, 'config.maxHttpSockets');

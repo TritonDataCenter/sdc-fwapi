@@ -23,6 +23,9 @@
       "expiry": 300
     }
   },
+{{#FWRULE_VERSION}}
+  "fwrule_version": {{{FWRULE_VERSION}}},
+{{/FWRULE_VERSION}}
   "vmapi": {
     "url": "http://{{{VMAPI_SERVICE}}}",
     "connectTimeout": 1000,
