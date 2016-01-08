@@ -17,7 +17,7 @@
     "effluent-logger": "git+https://github.com/joshwilsdon/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
     "extsprintf": "1.0.2",
     "fast-stream": "git+ssh://git@github.com:joyent/sdc-fast-stream.git#893d59d",
-    "fwrule": "git+ssh://git@github.com:joyent/sdc-fwrule.git#406a93e",
+    "fwrule": "git+ssh://git@github.com:joyent/sdc-fwrule.git#d1174be",
     "moray": "git+ssh://git@github.com:joyent/node-moray.git#b84ef0e",
     "tape": "4.2.2",
     "node-uuid": "1.2.0",
