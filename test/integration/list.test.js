@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2016, Joyent, Inc.
  */
 
 /*
@@ -28,6 +28,7 @@ var util = require('util');
 
 
 var OWNERS = [
+    mod_uuid.v4(),
     mod_uuid.v4(),
     mod_uuid.v4()
 ];
@@ -114,6 +115,23 @@ test('list: subnet 10.3.1.0/24', function (t) {
     });
 });
 
+test('list: all ports', function (t) {
+    mod_rule.createAndGet(t, {
+        rule: {
+            enabled: true,
+            owner_uuid: OWNERS[2],
+            rule: 'FROM tag foo TO all vms BLOCK udp PORTS 1 - 200, 1 - 65535'
+        },
+        exp: {
+            enabled: true,
+            owner_uuid: OWNERS[2],
+            rule: 'FROM tag foo TO all vms BLOCK udp PORT all'
+        }
+    }, function (err) {
+        t.ifError(err, 'creating range of all ports should be successful');
+        t.end();
+    });
+});
 
 test('list: parsed fields', function (t) {
     mod_rule.list(t, {

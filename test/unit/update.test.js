@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2016, Joyent, Inc.
  */
 
 /*
@@ -148,7 +148,20 @@ test('Delete rule', function (t) {
                 message: 'Rule not found'
             }, 'error body');
 
-            return t.end();
+            FWAPI.deleteRule(RULES[0].uuid, function (err3, res3) {
+                t.ok(err3, 'deleteRule error');
+                if (!err3) {
+                    return t.end();
+                }
+
+                t.deepEqual(err3.body, {
+                        code: 'ResourceNotFound',
+                        message: 'Rule not found'
+                }, 'error body');
+
+                return t.end();
+            });
+
         });
     });
 });

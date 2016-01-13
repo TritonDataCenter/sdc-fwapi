@@ -32,6 +32,7 @@ var verror = require('verror');
 
 var BUCKETS = {};
 var CUR_IP = 1;
+var FWRULE_VERSION = process.env.FWRULE_VERSION || 3;
 // Set to log messages to stderr
 var LOG = process.env.LOG || false;
 var OWNER_UUID = mod_uuid.v4();
@@ -82,6 +83,7 @@ function createClientAndServer(callback) {
                 host: 'unused',
                 port: 2020
             },
+            fwrule_version: FWRULE_VERSION,
             pollInterval: 3000,
             port: 0,
             ufds: { }

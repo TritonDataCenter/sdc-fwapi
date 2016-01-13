@@ -468,9 +468,7 @@ test('resolve', function (t) {
         {
             allVMs: false,
             owner_uuid: OWNERS[6],
-            // XXX: this incorrectly gets 'vmToOneThree', which has a tag
-            // with a value of three rather than a key
-            rules: oRules(6, [ 'vmToMultiTags', 'vmToOneThree' ]),
+            rules: oRules(6, [ 'vmToMultiTags' ]),
             tags: { },
             vms: [ VMS[3] ]
         } ],
@@ -549,8 +547,7 @@ test('list', function (t) {
     ],
 
     [   { owner_uuid: OWNERS[0], tag: 'other' },
-    // XXX: this incorrectly gets all tags with a value of other as well:
-        oRules(0, [ 'otherToRole', 'vm1ToRoleOther', 'nowThenToRoleOther' ])
+        oRules(0, [ 'otherToRole' ])
     ],
 
     [   { owner_uuid: OWNERS[0], tag: 'foo' },
