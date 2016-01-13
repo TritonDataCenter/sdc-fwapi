@@ -12,6 +12,7 @@
  * Provision workflow and FWAPI integration tests
  */
 
+var test = require('tape');
 var async = require('async');
 var config = require('../lib/config');
 var fmt = require('util').format;
@@ -28,9 +29,6 @@ var util = require('util');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var OWNERS = [ config.test.owner_uuid ];
 var RULES = {};
 var TAGS = {
@@ -46,13 +44,11 @@ var VMS = [];
 // --- Setup
 
 
-
-// Run before every test
-exports.setUp = function (cb) {
-    return config.haveTestVars(
-        ['owner_uuid', 'provision_image', 'server1_uuid', 'server2_uuid'], cb);
-};
-
+function pre_test(t) {
+    config.haveTestVars(
+        ['owner_uuid', 'provision_image', 'server1_uuid', 'server2_uuid'],
+        t.end);
+}
 
 // Make sure we have VMs to work with
 function checkVMsProvisioned(callback) {
@@ -77,8 +73,9 @@ function checkVMsProvisioned(callback) {
  * Add a couple 'FROM any to tag' rules: these explicitly do not reference
  * other VMs, because they allow traffic from 'any'
  */
-exports['Add rules'] = {
-    'allow SSH': function (t) {
+test('pre_test', pre_test);
+test('Add rules', function (t) {
+    t.test('allow SSH', function (t2) {
         RULES.ssh = {
             description: 'allow SSH',
             enabled: true,
@@ -87,13 +84,13 @@ exports['Add rules'] = {
                 TAGS.ssh)
         };
 
-        mod_rule.create(t, {
+        mod_rule.create(t2, {
             rule: RULES.ssh,
             exp: RULES.ssh
         });
-    },
+    });
 
-    'allow DNS': function (t) {
+    t.test('allow DNS', function (t2) {
         RULES.dns = {
             description: 'allow DNS',
             enabled: true,
@@ -102,16 +99,17 @@ exports['Add rules'] = {
                 TAGS.dns)
         };
 
-        mod_rule.create(t, {
+        mod_rule.create(t2, {
             rule: RULES.dns,
             exp: RULES.dns
         });
-    }
-};
+    });
+});
 
 
-exports['Provision VMs'] = function (t) {
-    // Explicitly pick different servers for these VMs, since this is testing
+test('pre_test', pre_test);
+test('Provision VMs', function (t) {
+    // Explicitly pick different servers for these VMs, since this is ting
     // that remote VMs get added to other servers.
     var vms = [
         {
@@ -148,75 +146,81 @@ exports['Provision VMs'] = function (t) {
             VMS = res;
         }
 
-        return t.done();
+        return t.end();
+    });
+});
+
+var group_pre_test = function (t) {
+    t.test('VMs Provisioned', function (t2) {
+        checkVMsProvisioned(t2.end);
     });
 };
 
-
-exports['After provision: rules'] = {
-    setUp: checkVMsProvisioned,
+test('pre_test', pre_test);
+test('After provision: rules', function (t) {
 
     // CN 0 (with VM 0): should have the DNS rule but not the SSH rule
-
-    'CN 0: SSH rule not present': function (t) {
-        mod_cn.getRule(t, {
+    group_pre_test(t);
+    t.test('CN 0: SSH rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.ssh.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    },
+    });
 
-    'CN 0: DNS rule present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 0: DNS rule present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.dns.uuid,
             exp: RULES.dns
         });
-    },
+    });
 
     // CN 1 (with VM 1): should have the SSH rule but not the DNS rule
 
-    'CN 1: SSH rule present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: SSH rule present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.ssh.uuid,
             exp: RULES.ssh
         });
-    },
+    });
 
-    'CN 1: DNS rule not present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: DNS rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.dns.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    },
+    });
 
-    'FWAPI rules for VM 0': function (t) {
-        mod_rule.vmRules(t, {
+    t.test('FWAPI rules for VM 0', function (t2) {
+        mod_rule.vmRules(t2, {
             uuid: VMS[0].uuid,
             exp: [ RULES.dns ]
         });
-    },
+    });
 
-    'FWAPI rules for VM 1': function (t) {
-        mod_rule.vmRules(t, {
+    t.test('FWAPI rules for VM 1', function (t2) {
+        mod_rule.vmRules(t2, {
             uuid: VMS[1].uuid,
             exp: [ RULES.ssh ]
         });
-    }
-};
+    });
+});
 
 
 /*
  * Add a disabled rule
  */
-exports['Add disabled rule'] = {
-    setUp: checkVMsProvisioned,
+test('pre_test', pre_test);
+test('Add disabled rule', function (t) {
 
-    'add': function (t) {
+    group_pre_test(t);
+    t.test('add', function (t2) {
         RULES.db = {
             description: 'allow DB',
             enabled: false,
@@ -226,158 +230,160 @@ exports['Add disabled rule'] = {
                 TAGS.db, TAGS.db, TAGS.db, TAGS.db)
         };
 
-        mod_rule.create(t, {
+        mod_rule.create(t2, {
             rule: RULES.db,
             exp: RULES.db
         });
-    },
+    });
 
     // The rule is disabled, so no rules or remote VMs should have been
     // added to either CN
 
-    'CN 0: DB rule not present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 0: DB rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.db.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    },
+    });
 
-    'CN 1: DB rule not present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: DB rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.db.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    },
+    });
 
-    'CN 0: RVM 1 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 0: RVM 1 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: VMS[1].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
-    },
+    });
 
-    'CN 1: RVM 0 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 0 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[0].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
-    },
+    });
 
-    'CN 1: RVM 2 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 2 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[2].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
-    }
-};
+    });
+});
 
 
-exports['Enable rule'] = {
-    setUp: checkVMsProvisioned,
+test('pre_test', pre_test);
+test('Enable rule', function (t) {
 
-    'enable': function (t) {
-        mod_rule.updateAndGet(t, {
+    group_pre_test(t);
+    t.test('enable', function (t2) {
+        mod_rule.updateAndGet(t2, {
             uuid: RULES.db.uuid,
             params: { enabled: true },
             partialExp: { enabled: true },
             rule: RULES.db
         });
-    },
+    });
 
 
     // CN 0 (with VM 0): should have the DB rule and the
     // other RVM (VM 1) tagged with db
 
-    'CN 0: after enable: DB rule present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 0: after enable: DB rule present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.db.uuid,
             exp: RULES.db
         });
-    },
+    });
 
-    'CN 0: RVM 1 present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 0: RVM 1 present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: VMS[1].uuid,
             exp: VMS[1]
         });
-    },
+    });
 
 
     // CN 1 (with VM 1): should have the DB rule and the
     // other RVM (VM 0) tagged with db
 
-    'CN 1: after enable: DB rule present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: after enable: DB rule present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.db.uuid,
             exp: RULES.db
         });
-    },
+    });
 
-    'CN 1: RVM 0 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 0 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[0].uuid,
             exp: VMS[0]
         });
-    },
+    });
 
     // The VM that is not referenced in the rule should not be on
     // either server
 
-    'CN 0: RVM 2 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 0: RVM 2 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: VMS[2].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
-    },
+    });
 
-    'CN 1: RVM 2 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 2 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[2].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
-    },
+    });
 
-    'FWAPI rules for VM 0': function (t) {
-        mod_rule.vmRules(t, {
+    t.test('FWAPI rules for VM 0', function (t2) {
+        mod_rule.vmRules(t2, {
             uuid: VMS[0].uuid,
             exp: [ RULES.dns, RULES.db ]
         });
-    },
+    });
 
-    'FWAPI rules for VM 1': function (t) {
-        mod_rule.vmRules(t, {
+    t.test('FWAPI rules for VM 1', function (t2) {
+        mod_rule.vmRules(t2, {
             uuid: VMS[1].uuid,
             exp: [ RULES.db, RULES.ssh ]
         });
-    }
-};
+    });
+});
 
 
 /*
  * Add a VM -> VM rule
  */
-exports['Add VMs rule'] = {
-    setUp: checkVMsProvisioned,
+test('pre_test', pre_test);
+test('Add VMs rule', function (t) {
 
-    'add': function (t) {
+    group_pre_test(t);
+    t.test('add', function (t2) {
         RULES.https = {
             enabled: true,
             owner_uuid: OWNERS[0],
@@ -385,54 +391,54 @@ exports['Add VMs rule'] = {
                 VMS[2].uuid, VMS[1].uuid)
         };
 
-        mod_rule.create(t, {
+        mod_rule.create(t2, {
             rule: RULES.https,
             exp: RULES.https
         });
-    },
+    });
 
     // The rule should be added to CN 0 (VM 2's CN)
 
-    'CN 0: HTTPS rule not present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 0: HTTPS rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.https.uuid,
             exp: RULES.https
         });
-    },
+    });
 
     // Both the rule and RVM 2 should be added to CN 1 (VM 1's CN)
 
-    'CN 1: HTTPS rule present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: HTTPS rule present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.https.uuid,
             exp: RULES.https
         });
-    },
+    });
 
-    'CN 1: RVM 2 present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 2 present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[2].uuid,
             exp: VMS[2]
         });
-    },
+    });
 
-    'FWAPI rules for VM 1': function (t) {
-        mod_rule.vmRules(t, {
+    t.test('FWAPI rules for VM 1', function (t2) {
+        mod_rule.vmRules(t2, {
             uuid: VMS[1].uuid,
             exp: [ RULES.db, RULES.https, RULES.ssh ]
         });
-    },
+    });
 
-    'FWAPI rules for VM 2': function (t) {
-        mod_rule.vmRules(t, {
+    t.test('FWAPI rules for VM 2', function (t2) {
+        mod_rule.vmRules(t2, {
             uuid: VMS[2].uuid,
             exp: [ RULES.https ]
         });
-    }
-};
+    });
+});
 
 
 
@@ -440,24 +446,12 @@ exports['Add VMs rule'] = {
 
 
 
-exports.teardown = {
-    'delete rules': function (t) {
-        mod_rule.delAllCreated(t);
-    },
+test('teardown', function (t) {
+    t.test('delete rules', function (t2) {
+        mod_rule.delAllCreated(t2);
+    });
 
-    'delete VMs': function (t) {
-        mod_vm.delAllCreated(t);
-    }
-};
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+    t.test('delete VMs', function (t2) {
+        mod_vm.delAllCreated(t2);
+    });
+});

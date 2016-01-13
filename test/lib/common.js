@@ -26,7 +26,7 @@ function done(err, res, t, callback) {
         return callback(err, res);
     }
 
-    return t.done();
+    return t.end();
 }
 
 

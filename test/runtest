@@ -29,4 +29,4 @@ EOF
     exit 2
 fi
 
-PATH=$NODE_INSTALL/bin:$PATH $NODEUNIT --reporter=tap $1
+PATH=$NODE_INSTALL/bin:$PATH node $1

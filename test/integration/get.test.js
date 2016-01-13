@@ -12,6 +12,7 @@
  * Integration tests for getting rules
  */
 
+var test = require('tape');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
 
@@ -21,9 +22,6 @@ var mod_uuid = require('node-uuid');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var OWNERS = [
     mod_uuid.v4(),
     mod_uuid.v4()
@@ -52,16 +50,14 @@ var RULES = [
 
 
 
-exports.setup = {
-    'add all rules': function (t) {
-        mod_rule.createAndGetN(t, {
-            rules: RULES
-        });
-    }
-};
+test('add all rules', function (t) {
+    mod_rule.createAndGetN(t, {
+        rules: RULES
+    });
+});
 
 
-exports['get: owner rule with owner_uuid'] = function (t) {
+test('get: owner rule with owner_uuid', function (t) {
     mod_rule.get(t, {
         uuid: RULES[0].uuid,
         params: {
@@ -69,10 +65,10 @@ exports['get: owner rule with owner_uuid'] = function (t) {
         },
         exp: RULES[0]
     });
-};
+});
 
 
-exports['get: owner rule with wrong owner_uuid'] = function (t) {
+test('get: owner rule with wrong owner_uuid', function (t) {
     mod_rule.get(t, {
         uuid: RULES[0].uuid,
         params: {
@@ -89,15 +85,15 @@ exports['get: owner rule with wrong owner_uuid'] = function (t) {
             } ]
         }
     });
-};
+});
 
 
-exports['get: global rule with no params'] = function (t) {
+test('get: global rule with no params', function (t) {
     mod_rule.get(t, {
         uuid: RULES[2].uuid,
         exp: RULES[2]
     });
-};
+});
 
 
 
@@ -105,16 +101,4 @@ exports['get: global rule with no params'] = function (t) {
 
 
 
-exports.teardown = mod_rule.delAllCreated;
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+test('teardown', mod_rule.delAllCreated);

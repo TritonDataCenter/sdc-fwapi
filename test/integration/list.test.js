@@ -12,6 +12,7 @@
  * Integration tests for listing rules
  */
 
+var test = require('tape');
 var async = require('async');
 var constants = require('../../lib/util/constants');
 var extend = require('xtend');
@@ -26,9 +27,6 @@ var util = require('util');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var OWNERS = [
     mod_uuid.v4(),
     mod_uuid.v4()
@@ -82,16 +80,14 @@ var RULES = [
 
 
 
-exports.setup = {
-    'add all rules': function (t) {
-        mod_rule.createAndGetN(t, {
-            rules: RULES
-        });
-    }
-};
+test('add all rules', function (t) {
+    mod_rule.createAndGetN(t, {
+        rules: RULES
+    });
+});
 
 
-exports['list: subnet 10.2.1.0/24'] = function (t) {
+test('list: subnet 10.2.1.0/24', function (t) {
     mod_rule.list(t, {
         params: {
             owner_uuid: OWNERS[0],
@@ -103,10 +99,10 @@ exports['list: subnet 10.2.1.0/24'] = function (t) {
             // Should *not* match RULES[4], which is owned by OWNERS[1]
         ]
     });
-};
+});
 
 
-exports['list: subnet 10.3.1.0/24'] = function (t) {
+test('list: subnet 10.3.1.0/24', function (t) {
     mod_rule.list(t, {
         params: {
             owner_uuid: OWNERS[0],
@@ -116,10 +112,10 @@ exports['list: subnet 10.3.1.0/24'] = function (t) {
             RULES[3]
         ]
     });
-};
+});
 
 
-exports['list: parsed fields'] = function (t) {
+test('list: parsed fields', function (t) {
     mod_rule.list(t, {
         params: {
             owner_uuid: OWNERS[1],
@@ -170,7 +166,7 @@ exports['list: parsed fields'] = function (t) {
             })
         ]
     });
-};
+});
 
 
 
@@ -178,16 +174,4 @@ exports['list: parsed fields'] = function (t) {
 
 
 
-exports.teardown = mod_rule.delAllCreated;
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+test('teardown', mod_rule.delAllCreated);

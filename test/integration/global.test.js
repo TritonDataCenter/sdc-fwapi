@@ -12,6 +12,7 @@
  * Integration tests for global rules
  */
 
+var test = require('tape');
 var async = require('async');
 var h = require('./helpers');
 var mod_rule = require('../lib/rule');
@@ -24,9 +25,6 @@ var util = require('util');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var FORBIDDEN_BODY = {
     code : 'Forbidden',
     message : 'owner does not match',
@@ -45,7 +43,7 @@ var RULES = [];
 
 
 
-exports['Add rule'] = function (t) {
+test('Add rule', function (t) {
     RULES.push({
         enabled: true,
         global: true,
@@ -56,13 +54,13 @@ exports['Add rule'] = function (t) {
         rule: RULES[0],
         exp: RULES[0]
     });
-};
+});
 
 
 /*
  * Should not be able to update the rule if owner_uuid is set
  */
-exports['Update rule when owner_uuid set'] = function (t) {
+test('Update rule when owner_uuid set', function (t) {
     mod_rule.updateAndGet(t, {
         uuid: RULES[0].uuid,
         params: {
@@ -72,13 +70,13 @@ exports['Update rule when owner_uuid set'] = function (t) {
         expCode: 403,
         expErr: FORBIDDEN_BODY
     });
-};
+});
 
 
 /*
  * Should not be able to delete the rule if owner_uuid is set
  */
-exports['Delete rule with owner_uuid set'] = function (t) {
+test('Delete rule with owner_uuid set', function (t) {
     mod_rule.del(t, {
         uuid: RULES[0].uuid,
         params: {
@@ -87,17 +85,17 @@ exports['Delete rule with owner_uuid set'] = function (t) {
         expCode: 403,
         expErr: FORBIDDEN_BODY
     });
-};
+});
 
 
-exports['List global rules'] = function (t) {
+test('List global rules', function (t) {
     mod_rule.list(t, {
         params: {
             global: true
         }
     }, function (err, res) {
         if (err) {
-            return t.done();
+            return t.end();
         }
 
         var nonGlobals = [];
@@ -109,9 +107,9 @@ exports['List global rules'] = function (t) {
         }
 
         t.deepEqual(nonGlobals, [], 'only global rules in the list');
-        return t.done();
+        return t.end();
     });
-};
+});
 
 
 
@@ -119,18 +117,6 @@ exports['List global rules'] = function (t) {
 
 
 
-exports.teardown = function (t) {
+test('teardown', function (t) {
     mod_rule.delAllCreated(t);
-};
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+});

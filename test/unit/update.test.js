@@ -12,6 +12,7 @@
  * Unit tests for /rules endpoints
  */
 
+var test = require('tape');
 var h = require('./helpers');
 var mocks = require('./mocks');
 var util = require('util');
@@ -35,22 +36,22 @@ var VMS = [ h.generateVM(), h.generateVM() ];
 
 
 
-exports.setup = function (t) {
+test('setup', function (t) {
     h.createClientAndServer(function (err, res) {
         t.ifError(err, 'server creation');
         t.ok(res, 'client');
         FWAPI = res;
-        t.done();
+        t.end();
     });
-};
+});
 
 
 
-// --- Create tests
+// --- Create ts
 
 
 
-exports['Add rule'] = function (t) {
+test('Add rule', function (t) {
     RULES.push({
         enabled: true,
         owner_uuid: VMS[0].owner_uuid,
@@ -61,7 +62,7 @@ exports['Add rule'] = function (t) {
     FWAPI.createRule(RULES[0], function (err, obj, req, res) {
         t.ifError(err, 'rule create');
         if (err) {
-            return t.done();
+            return t.end();
         }
 
         t.equal(res.statusCode, 202, 'status code');
@@ -78,17 +79,17 @@ exports['Add rule'] = function (t) {
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
             t.ifError(err2, 'getRule error');
             if (err2) {
-                return t.done();
+                return t.end();
             }
 
             t.deepEqual(res2, RULES[0], 'getRule');
-            return t.done();
+            return t.end();
         });
     });
-};
+});
 
 
-exports['Update rule'] = function (t) {
+test('Update rule', function (t) {
     var payload = {
         rule: util.format('FROM vm %s TO vm %s ALLOW tcp (PORT 80 AND PORT 81)',
             VMS[0].uuid, VMS[1].uuid)
@@ -98,7 +99,7 @@ exports['Update rule'] = function (t) {
     FWAPI.updateRule(RULES[0].uuid, payload, function (err, obj, req, res) {
         t.ifError(err, 'rule update');
         if (err) {
-            return t.done();
+            return t.end();
         }
 
         t.equal(res.statusCode, 202, 'status code');
@@ -113,21 +114,21 @@ exports['Update rule'] = function (t) {
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
             t.ifError(err2, 'getRule error');
             if (err2) {
-                return t.done();
+                return t.end();
             }
 
             t.deepEqual(res2, RULES[0], 'getRule');
-            return t.done();
+            return t.end();
         });
     });
-};
+});
 
 
-exports['Delete rule'] = function (t) {
+test('Delete rule', function (t) {
     FWAPI.deleteRule(RULES[0].uuid, function (err, obj, req, res) {
         t.ifError(err, 'rule delete');
         if (err) {
-            return t.done();
+            return t.end();
         }
 
         t.equal(res.statusCode, 204, 'status code');
@@ -139,7 +140,7 @@ exports['Delete rule'] = function (t) {
         FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
             t.ok(err2, 'getRule error');
             if (!err2) {
-                return t.done();
+                return t.end();
             }
 
             t.deepEqual(err2.body, {
@@ -147,10 +148,10 @@ exports['Delete rule'] = function (t) {
                 message: 'Rule not found'
             }, 'error body');
 
-            return t.done();
+            return t.end();
         });
     });
-};
+});
 
 
 
@@ -158,21 +159,9 @@ exports['Delete rule'] = function (t) {
 
 
 
-exports['Stop server'] = function (t) {
+test('Stop server', function (t) {
     h.stopServer(function (err) {
         t.ifError(err, 'server stop');
-        t.done();
+        t.end();
     });
-};
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports['Stop server']
-    };
-}
+});

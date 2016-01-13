@@ -12,6 +12,7 @@
  * Provision workflow and FWAPI integration tests
  */
 
+var test = require('tape');
 var async = require('async');
 var config = require('../lib/config');
 var fmt = require('util').format;
@@ -27,9 +28,6 @@ var util = require('util');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var OWNERS = [ config.test.owner_uuid ];
 var RULES = {};
 var TAGS = {
@@ -45,23 +43,23 @@ var VMS = [];
 
 
 // Run before every test
-exports.setUp = function (cb) {
+function pre_test(t) {
     return config.haveTestVars(
-        ['owner_uuid', 'provision_image', 'server1_uuid', 'server2_uuid'], cb);
-};
-
+        ['owner_uuid', 'provision_image', 'server1_uuid', 'server2_uuid'],
+        t.end);
+}
 
 // Make sure we have VMs to work with
-function checkVMsProvisioned(callback) {
+function checkVMsProvisioned(t2) {
     if (!VMS[0]) {
-        return callback(new Error('VM 0 not provisioned'));
+        return t2.end((new Error('VM 0 not provisioned')));
     }
 
     if (!VMS[1]) {
-        return callback(new Error('VM 1 not provisioned'));
+        return t2.end((new Error('VM 1 not provisioned')));
     }
 
-    return callback();
+    return t2.end();
 }
 
 
@@ -70,8 +68,9 @@ function checkVMsProvisioned(callback) {
 
 
 
-exports['Add rules'] = {
-    'VM 0 to VM 1': function (t) {
+test('pre_test', pre_test);
+test('Add rules', function (t) {
+    t.test('VM 0 to VM 1', function (t2) {
         RULES.ssh1 = {
             description: 'allow SSH',
             enabled: true,
@@ -81,19 +80,20 @@ exports['Add rules'] = {
                 TAGS.role, TAGS.role)
         };
 
-        mod_rule.create(t, {
+        mod_rule.create(t2, {
             rule: RULES.ssh1,
             exp: RULES.ssh1
         });
-    }
-};
+    });
+    t.end();
+});
 
 
 /**
  * Provision two VMs with firewalls disabled
  */
-exports['Provision VMs'] = function (t) {
-    // Explicitly pick different servers for these VMs, since this is testing
+test('Provision VMs', function (t) {
+    // Explicitly pick different servers for these VMs, since this is ting
     // that remote VMs get added to other servers.
     var vms = [
         {
@@ -121,97 +121,105 @@ exports['Provision VMs'] = function (t) {
             VMS = res;
         }
 
-        return t.done();
+        return t.end();
     });
-};
+});
 
+/*
+ * Pre-test to be run withing the 'After provision' and 'Enable firewall'
+ * group-tests.
+ */
+var group_pre_test = function (t) {
+    t.test(checkVMsProvisioned);
+};
 
 /**
  * Since both VMs have firewalls disabled, no rules or RVMs should have
  * been synced to either CN.
  */
-exports['After provision: rules'] = {
-    setUp: checkVMsProvisioned,
+test('After provision: rules', function (t) {
 
     // Since both VMs have their firewalls disabled, neither should have
     // the rule present.
 
-    'CN 0: ssh1 rule not present': function (t) {
-        mod_cn.getRule(t, {
+    group_pre_test(t);
+    t.test('CN 0: ssh1 rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.ssh1.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    },
+    });
 
-    'CN 1: RVM 0 not present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 0 not present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[0].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
-    },
+    });
 
-    'CN 1: ssh1 rule not present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: ssh1 rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.ssh1.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    }
-};
+    });
+    t.end();
+});
 
 
 /*
  * Enable VM 1's firewall. This should cause RVM 0 and the SSH rule to be
  * synced to VM1's CN.
  */
-exports['Enable firewall'] = {
-    setUp: checkVMsProvisioned,
+test('Enable firewall', function (t) {
 
-    'update VM': function (t) {
-        mod_vm.update(t, {
+    t.test('update VM', function (t2) {
+        mod_vm.update(t2, {
             uuid: VMS[1].uuid,
             params: { firewall_enabled: true },
             partialExp: { firewall_enabled: true }
         });
-    },
+    });
 
-    'VM 1: firewall status': function (t) {
-        mod_cn.getFwStatus(t, {
+    t.test('VM 1: firewall status', function (t2) {
+        mod_cn.getFwStatus(t2, {
             vm: VMS[1],
             exp: true
         });
-    },
+    });
 
-    'CN 0: ssh1 rule not present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 0: ssh1 rule not present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[0].server_uuid,
             uuid: RULES.ssh1.uuid,
             expCode: 404,
             expErr: mod_cn.notFoundErr
         });
-    },
+    });
 
-    'CN 1: ssh1 rule present': function (t) {
-        mod_cn.getRule(t, {
+    t.test('CN 1: ssh1 rule present', function (t2) {
+        mod_cn.getRule(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: RULES.ssh1.uuid,
             exp: RULES.ssh1
         });
-    },
+    });
 
-    'CN 1: RVM 0 present': function (t) {
-        mod_cn.getRVM(t, {
+    t.test('CN 1: RVM 0 present', function (t2) {
+        mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[0].uuid,
             exp: VMS[0]
         });
-    }
-};
+    });
+    t.end();
+});
 
 
 
@@ -219,24 +227,13 @@ exports['Enable firewall'] = {
 
 
 
-exports.teardown = {
-    'delete rules': function (t) {
-        mod_rule.delAllCreated(t);
-    },
+test('teardown', function (t) {
+    t.test('delete rules', function (t2) {
+        mod_rule.delAllCreated(t2);
+    });
 
-    'delete VMs': function (t) {
-        mod_vm.delAllCreated(t);
-    }
-};
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+    t.test('delete VMs', function (t2) {
+        mod_vm.delAllCreated(t2);
+    });
+    t.end();
+});

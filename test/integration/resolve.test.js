@@ -12,6 +12,7 @@
  * Unit tests for /resolve endpoint
  */
 
+var test = require('tape');
 var assert = require('assert-plus');
 var async = require('async');
 var fmt = require('util').format;
@@ -26,9 +27,6 @@ var util = require('util');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var NUM_OWNERS = 6;
 var NUM_VMS = 7;
 var OWNERS = [];
@@ -77,7 +75,7 @@ function oRules(ownerNum, names) {
 
 
 
-exports.setup = function (t) {
+test('setup', function (t) {
     var r;
     var rules = [];
     RULES = {
@@ -218,12 +216,12 @@ exports.setup = function (t) {
             exp: rule
         }, cb);
     }, function (err) {
-        return t.done();
+        return t.end();
     });
-};
+});
 
 
-exports['resolve'] = function (t) {
+test('resolve', function (t) {
     var exp = [
     // Querying for all rules with tag role: should return all rules with
     // that tag, even if they're more specific (eg: tag = "some value")
@@ -538,12 +536,12 @@ exports['resolve'] = function (t) {
         }, cb);
 
     }, function (err) {
-        return t.done();
+        return t.end();
     });
-};
+});
 
 
-exports['list'] = function (t) {
+test('list', function (t) {
     var exp = [
     [   { owner_uuid: OWNERS[0], tag: 'role' },
         oRules(0, [ 'otherToRole', 'vm0ToRoleWeb', 'fooToRoleWeb',
@@ -584,9 +582,9 @@ exports['list'] = function (t) {
         }, cb);
 
     }, function (err) {
-        return t.done();
+        return t.end();
     });
-};
+});
 
 
 
@@ -594,17 +592,6 @@ exports['list'] = function (t) {
 
 
 
-exports.teardown = function (t) {
+test('teardown', function (t) {
     mod_rule.delAllCreated(t);
-};
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+});

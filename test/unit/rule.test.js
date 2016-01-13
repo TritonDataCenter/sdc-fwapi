@@ -12,6 +12,7 @@
  * Unit tests for the firewall rule object
  */
 
+var test = require('tape');
 var mod_rule = require('../../lib/rule');
 var mod_uuid = require('node-uuid');
 var util = require('util');
@@ -42,7 +43,7 @@ function rawTag(key, val) {
 
 
 
-exports['all target types'] = function (t) {
+test('all target types', function (t) {
     var ips = ['192.168.1.1', '10.2.0.3'];
     var vms = ['9a343ca8-b42a-4a27-a9c5-800f57d1e8ed',
         '518908b6-8299-466d-8ea5-20a0ceff63ec'];
@@ -95,11 +96,11 @@ exports['all target types'] = function (t) {
     t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule2.dn');
 
-    t.done();
-};
+    t.end();
+});
 
 
-exports['owner_uuid'] = function (t) {
+test('owner_uuid', function (t) {
     var ip = '10.2.0.3';
     var vm = '9a343ca8-b42a-4a27-a9c5-800f57d1e8ed';
 
@@ -138,11 +139,11 @@ exports['owner_uuid'] = function (t) {
     t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule2.dn');
 
-    t.done();
-};
+    t.end();
+});
 
 
-exports['multiple tags with multiple quoted values'] = function (t) {
+test('multiple tags with multiple quoted values', function (t) {
     var owner = mod_uuid.v4();
     var rule = mod_rule.create({
         rule: 'FROM (tag "김치" = "백김치" OR '
@@ -197,11 +198,11 @@ exports['multiple tags with multiple quoted values'] = function (t) {
     t.ok(!rule.allVMs, 'rule.allVMs');
     t.deepEqual(rule.tags, ruleTags, 'rule.tags');
 
-    t.done();
-};
+    t.end();
+});
 
 
-exports['global'] = function (t) {
+test('global', function (t) {
     var caught = false;
     var rule;
 
@@ -217,5 +218,5 @@ exports['global'] = function (t) {
 
     t.ok(caught, 'Error thrown');
     t.ok(!rule, 'No rule');
-    t.done();
-};
+    t.end();
+});

@@ -70,7 +70,6 @@ start_time=$(date +%s)
 
 TOP=$(cd $(dirname $0)/../; pwd)
 NODE_INSTALL=$TOP/node
-NODEUNIT=$TOP/node_modules/.bin/nodeunit
 
 
 # Options.
@@ -135,7 +134,7 @@ set +o errexit
 for file in $test_files $multi_test_files; do
     test_file=$(basename $file)
     echo "# $test_file"
-    PATH=$NODE_INSTALL/bin:$PATH $NODEUNIT --reporter=tap $file \
+    PATH=$NODE_INSTALL/bin:$PATH node $file \
         | tee $OUTPUT_DIR/$test_file.tap
     [[ "$?" != "0" ]] && [[ -n "$opt_stop_on_failure" ]] && break
 done

@@ -12,6 +12,7 @@
  * Update tests for /rules endpoints
  */
 
+var test = require('tape');
 var async = require('async');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
@@ -25,7 +26,6 @@ var util = require('util');
 
 // Set this to any of the exports in this file to only run that test,
 // plus setup and teardown
-var runOne;
 var OWNERS = [ mod_uuid.v4() ];
 var RULES = [];
 
@@ -35,7 +35,7 @@ var RULES = [];
 
 
 
-exports['Add rule'] = function (t) {
+test('Add rule', function (t) {
     RULES.push({
         enabled: true,
         owner_uuid: OWNERS[0],
@@ -46,10 +46,10 @@ exports['Add rule'] = function (t) {
         rule: RULES[0],
         exp: RULES[0]
     });
-};
+});
 
 
-exports['Update rule'] = function (t) {
+test('Update rule', function (t) {
     var exp = [
     [
         'remove all vms',
@@ -118,9 +118,9 @@ exports['Update rule'] = function (t) {
             partialExp: data[1]
         }, cb);
     }, function () {
-        return t.done();
+        return t.end();
     });
-};
+});
 
 
 
@@ -128,18 +128,6 @@ exports['Update rule'] = function (t) {
 
 
 
-exports.teardown = function (t) {
+test('teardown', function (t) {
     mod_rule.delAllCreated(t);
-};
-
-
-
-// Use to run only one test in this file:
-if (runOne) {
-    module.exports = {
-        setup: exports.setup,
-        setUp: exports.setUp,
-        oneTest: runOne,
-        teardown: exports.teardown
-    };
-}
+});
