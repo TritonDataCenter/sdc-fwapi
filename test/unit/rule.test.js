@@ -18,6 +18,14 @@ var mod_uuid = require('node-uuid');
 var util = require('util');
 var util_ip = require('../../lib/util/ip');
 
+/*
+ * Skeleton app object, needed by Rule objects for internal logic
+ */
+var app = {
+    config: {
+        fwrule_version: 1
+    }
+}
 
 
 // --- Helper functions
@@ -60,7 +68,7 @@ test('all target types', function (t) {
         global: true
     };
 
-    var rule = mod_rule.create(inRule);
+    var rule = mod_rule.create(inRule, app);
     var raw = {
         fromip: [util_ip.aton(ips[0])],
         fromsubnet: [subnetNumber(subnets[0])],
@@ -90,7 +98,7 @@ test('all target types', function (t) {
         'rule.dn');
 
     // Now recreate the rule from the raw UFDS data
-    var rule2 = mod_rule.create(rule.raw());
+    var rule2 = mod_rule.create(rule.raw(), app);
     t.deepEqual(rule2.raw(), raw, 'rule2.raw()');
     t.deepEqual(rule2.serialize(), inRule, 'rule2.serialize()');
     t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
@@ -110,7 +118,7 @@ test('owner_uuid', function (t) {
         enabled: true
     };
 
-    var rule = mod_rule.create(inRule);
+    var rule = mod_rule.create(inRule, app);
     var raw = {
         fromip: [ util_ip.aton(ip) ],
         tovm: [ vm ],
@@ -133,7 +141,7 @@ test('owner_uuid', function (t) {
         'rule.dn');
 
     // Now recreate the rule from the raw UFDS data
-    var rule2 = mod_rule.create(rule.raw());
+    var rule2 = mod_rule.create(rule.raw(), app);
     t.deepEqual(rule2.raw(), raw, 'rule2.raw()');
     t.deepEqual(rule2.serialize(), inRule, 'rule2.serialize()');
     t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
@@ -151,7 +159,7 @@ test('multiple tags with multiple quoted values', function (t) {
             + '(tag "some tag" = value OR '
             + 'tag some-tag = "another value") ALLOW tcp PORT 80',
         owner_uuid: owner
-    });
+    }, app);
 
     var raw = {
         enabled: false,
@@ -192,7 +200,7 @@ test('multiple tags with multiple quoted values', function (t) {
     t.deepEqual(rule.tags, ruleTags, 'rule.tags');
 
     // Now check that we can reconstruct this data from UFDS
-    rule = mod_rule.create(raw);
+    rule = mod_rule.create(raw, app);
     t.deepEqual(rule.raw(), raw, 'rule.raw()');
     t.deepEqual(rule.raw(), raw, 'rule.raw()');
     t.ok(!rule.allVMs, 'rule.allVMs');
