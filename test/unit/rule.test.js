@@ -25,7 +25,7 @@ var app = {
     config: {
         fwrule_version: 1
     }
-}
+};
 
 
 // --- Helper functions
