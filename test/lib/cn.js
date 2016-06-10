@@ -36,7 +36,7 @@ var NOT_FOUND_ERR = {
     code: 'ResourceNotFound',
     message: 'rule not found'
 };
-var POLL_INTERVAL = config.test.api_poll_interval;
+var POLL_INTERVAL = config.test.firewaller_check_interval;
 var POLL_TIMEOUT = config.test.firewaller_check_timeout;
 var RVM_NOT_FOUND_ERR = {
     code: 'ResourceNotFound',
