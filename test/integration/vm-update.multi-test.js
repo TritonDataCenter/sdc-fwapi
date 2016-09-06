@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright 2016, Joyent, Inc.
  */
 
 /*
@@ -13,12 +13,9 @@
  */
 
 var test = require('tape');
-var async = require('async');
 var config = require('../lib/config');
-var fmt = require('util').format;
 var mod_cn = require('../lib/cn');
 var mod_rule = require('../lib/rule');
-var mod_uuid = require('node-uuid');
 var mod_vm = require('../lib/vm');
 var util = require('util');
 
@@ -32,6 +29,8 @@ var OWNERS = [ config.test.owner_uuid ];
 var RULES = {};
 var TAGS = {
     // add process.pid to ensure the tags are unique
+    web: 'web_' + process.pid,
+    db: 'db_' + process.pid,
     role: 'role_' + process.pid
 };
 var VMS = [];
@@ -70,7 +69,7 @@ function checkVMsProvisioned(t2) {
 
 test('pre_test', pre_test);
 test('Add rules', function (t) {
-    t.test('VM 0 to VM 1', function (t2) {
+    t.test('VM 0 to VM 1: SSH', function (t2) {
         RULES.ssh1 = {
             description: 'allow SSH',
             enabled: true,
@@ -83,6 +82,22 @@ test('Add rules', function (t) {
         mod_rule.create(t2, {
             rule: RULES.ssh1,
             exp: RULES.ssh1
+        });
+    });
+
+    t.test('VM 2 to VM 1: DB', function (t2) {
+        RULES.web1 = {
+            description: 'allow DB access',
+            enabled: true,
+            owner_uuid: OWNERS[0],
+            rule: util.format(
+                'FROM tag %s TO tag %s ALLOW tcp PORT 5432',
+                TAGS.web, TAGS.db)
+        };
+
+        mod_rule.create(t2, {
+            rule: RULES.web1,
+            exp: RULES.web1
         });
     });
     t.end();
@@ -109,10 +124,19 @@ test('Provision VMs', function (t) {
             owner_uuid: OWNERS[0],
             server_uuid: config.test.server2_uuid,
             tags: { }
+        },
+        {
+            alias: mod_vm.alias(),
+            firewall_enabled: false,
+            owner_uuid: OWNERS[0],
+            server_uuid: config.test.server1_uuid,
+            tags: { }
         }
     ];
     vms[0].tags[TAGS.role] = 'one';
     vms[1].tags[TAGS.role] = 'two';
+    vms[1].tags[TAGS.db] = '2';
+    vms[2].tags[TAGS.web] = '3';
 
     mod_vm.provision(t, {
         vms: vms
@@ -121,7 +145,8 @@ test('Provision VMs', function (t) {
             VMS = res;
         }
 
-        return t.end();
+        t.ifError(err, 'Provisioning VMs should succeed');
+        t.end();
     });
 });
 
@@ -152,10 +177,28 @@ test('After provision: rules', function (t) {
         });
     });
 
+    t.test('CN 0: web1 rule not present', function (t2) {
+        mod_cn.getRule(t2, {
+            server_uuid: VMS[0].server_uuid,
+            uuid: RULES.web1.uuid,
+            expCode: 404,
+            expErr: mod_cn.notFoundErr
+        });
+    });
+
     t.test('CN 1: RVM 0 not present', function (t2) {
         mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
             uuid: VMS[0].uuid,
+            expCode: 404,
+            expErr: mod_cn.rvmNotFoundErr
+        });
+    });
+
+    t.test('CN 1: RVM 2 not present', function (t2) {
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[2].uuid,
             expCode: 404,
             expErr: mod_cn.rvmNotFoundErr
         });
@@ -169,6 +212,16 @@ test('After provision: rules', function (t) {
             expErr: mod_cn.notFoundErr
         });
     });
+
+    t.test('CN 1: web1 rule not present', function (t2) {
+        mod_cn.getRule(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: RULES.web1.uuid,
+            expCode: 404,
+            expErr: mod_cn.notFoundErr
+        });
+    });
+
     t.end();
 });
 
@@ -211,6 +264,14 @@ test('Enable firewall', function (t) {
         });
     });
 
+    t.test('CN 1: web1 rule present', function (t2) {
+        mod_cn.getRule(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: RULES.web1.uuid,
+            exp: RULES.web1
+        });
+    });
+
     t.test('CN 1: RVM 0 present', function (t2) {
         mod_cn.getRVM(t2, {
             server_uuid: VMS[1].server_uuid,
@@ -218,8 +279,110 @@ test('Enable firewall', function (t) {
             exp: VMS[0]
         });
     });
+
+    t.test('CN 1: RVM 2 present', function (t2) {
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[2].uuid,
+            exp: VMS[2]
+        });
+    });
+
     t.end();
 });
+
+
+test('Remove "web" tag from VM 2', function (t) {
+
+    t.test('update VM', function (t2) {
+        mod_vm.removeTag(t2, {
+            uuid: VMS[2].uuid,
+            tag: TAGS.web
+        });
+    });
+
+    t.test('CN 1: RVM 2 present and missing "web" tag', function (t2) {
+        delete VMS[2].tags[TAGS.web];
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[2].uuid,
+            exp: VMS[2]
+        });
+    });
+
+    t.test('Syncing all CNs', function (t2) {
+        mod_cn.syncAll(t2, [ VMS[1].server_uuid ]);
+    });
+
+    t.test('CN 1: RVM 2 not present', function (t2) {
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[2].uuid,
+            expCode: 404,
+            expErr: mod_cn.rvmNotFoundErr
+        });
+    });
+
+    t.end();
+});
+
+
+test('Add back "web" tag to VM 2', function (t) {
+
+    t.test('update VM', function (t2) {
+        VMS[2].tags[TAGS.web] = '4';
+        mod_vm.addTags(t2, {
+            uuid: VMS[2].uuid,
+            tags: VMS[2].tags
+        });
+    });
+
+    t.test('CN 1: RVM 2 present', function (t2) {
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[2].uuid,
+            exp: VMS[2]
+        });
+    });
+
+    t.end();
+});
+
+
+test('Change value of "role" tag on VM 0', function (t) {
+
+    t.test('update VM', function (t2) {
+        VMS[0].tags[TAGS.role] = 'three';
+        mod_vm.updateTags(t2, {
+            uuid: VMS[0].uuid,
+            tags: VMS[0].tags
+        });
+    });
+
+    t.test('CN 1: RVM 0 updated', function (t2) {
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[0].uuid,
+            exp: VMS[0]
+        });
+    });
+
+    t.test('Syncing all CNs', function (t2) {
+        mod_cn.syncAll(t2, [ VMS[1].server_uuid ]);
+    });
+
+    t.test('CN 1: RVM 0 not present', function (t2) {
+        mod_cn.getRVM(t2, {
+            server_uuid: VMS[1].server_uuid,
+            uuid: VMS[0].uuid,
+            expCode: 404,
+            expErr: mod_cn.rvmNotFoundErr
+        });
+    });
+
+    t.end();
+});
+
 
 
 
@@ -228,12 +391,7 @@ test('Enable firewall', function (t) {
 
 
 test('teardown', function (t) {
-    t.test('delete rules', function (t2) {
-        mod_rule.delAllCreated(t2);
-    });
-
-    t.test('delete VMs', function (t2) {
-        mod_vm.delAllCreated(t2);
-    });
+    t.test('delete rules', mod_rule.delAllCreated);
+    t.test('delete VMs', mod_vm.delAllCreated);
     t.end();
 });

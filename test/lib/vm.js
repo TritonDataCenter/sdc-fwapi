@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright 2016, Joyent, Inc.
  */
 
 /*
@@ -311,6 +311,84 @@ function provision(t, opts, callback) {
 
 
 /**
+ * Add tags to a VM
+ */
+function addTags(t, opts, callback) {
+    assert.object(t, 't');
+    assert.object(opts, 'opts');
+    assert.optionalFunc(callback, 'callback');
+    assert.string(opts.uuid, 'opts.uuid');
+    assert.object(opts.tags, 'opts.tags');
+
+    var client = opts.client || mod_client.get('vmapi');
+    client.addMetadata('tags', { uuid: opts.uuid, metadata: opts.tags }, {},
+        function (err, job) {
+        if (ifErr(t, err, 'add tags to VM')) {
+            t.deepEqual(opts.tags, {}, 'VM add tags');
+            done(err, null, t, callback);
+            return;
+        }
+
+        waitForJob(t, job.job_uuid, function (err2, res) {
+            done(err2, null, t, callback);
+        });
+    });
+}
+
+
+/**
+ * Add tags to a VM
+ */
+function removeTag(t, opts, callback) {
+    assert.object(t, 't');
+    assert.object(opts, 'opts');
+    assert.optionalFunc(callback, 'callback');
+    assert.string(opts.uuid, 'opts.uuid');
+    assert.string(opts.tag, 'opts.tag');
+
+    var client = opts.client || mod_client.get('vmapi');
+    client.deleteMetadata('tags', { uuid: opts.uuid }, opts.tag, {},
+        function (err, job) {
+        if (ifErr(t, err, 'remove tag from VM')) {
+            t.deepEqual(opts.tag, '', 'VM remove tag');
+            done(err, null, t, callback);
+            return;
+        }
+
+        waitForJob(t, job.job_uuid, function (err2, res) {
+            done(err2, null, t, callback);
+        });
+    });
+}
+
+
+/**
+ * Add tags to a VM
+ */
+function updateTags(t, opts, callback) {
+    assert.object(t, 't');
+    assert.object(opts, 'opts');
+    assert.optionalFunc(callback, 'callback');
+    assert.string(opts.uuid, 'opts.uuid');
+    assert.object(opts.tags, 'opts.tags');
+
+    var client = opts.client || mod_client.get('vmapi');
+    client.setMetadata('tags', { uuid: opts.uuid, metadata: opts.tags }, {},
+        function (err, job) {
+        if (ifErr(t, err, 'update tags to VM')) {
+            t.deepEqual(opts.tags, {}, 'VM update tags');
+            done(err, null, t, callback);
+            return;
+        }
+
+        waitForJob(t, job.job_uuid, function (err2, res) {
+            done(err2, null, t, callback);
+        });
+    });
+}
+
+
+/**
  * Update a VM
  */
 function update(t, opts, callback) {
@@ -375,6 +453,9 @@ function update(t, opts, callback) {
 
 
 module.exports = {
+    addTags: addTags,
+    removeTag: removeTag,
+    updateTags: updateTags,
     alias: alias,
     del: del,
     delAllCreated: delAllCreated,

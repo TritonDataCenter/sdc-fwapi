@@ -9,7 +9,7 @@
     "mockery": "1.4.0"
   },
   "dependencies": {
-    "assert-plus": "0.1",
+    "assert-plus": "1.0.0",
     "async": "0.1",
     "bunyan": "1.2.3",
     "clone": "0.1",
