@@ -22,7 +22,7 @@ var fmt = require('util').format;
 var ifErr = common.ifErr;
 var mod_client = require('./client');
 var mod_log = require('./log');
-var util = require('util');
+var vasync = require('vasync');
 var VError = require('verror').VError;
 
 
@@ -35,7 +35,7 @@ var VM_PARAMS = {
     image_uuid: config.test.provision_image,
     networks: [ { name: 'external' } ],
     brand: 'joyent',
-    ram: 128
+    billing_id: config.test.billing_id
 };
 var VM_NUM = 0;
 var LOG = mod_log.child({ component: 'vm' });
@@ -63,6 +63,11 @@ function provisionOne(t, opts, callback) {
         vmParams[p] = opts.vm[p];
     }
 
+    // If there isn't already an alias, ensure one.
+    if (!vmParams.hasOwnProperty('alias')) {
+        vmParams.alias = alias();
+    }
+
     LOG.debug({ vm: opts.vm }, 'provisioning VM');
     client.createVm(vmParams, function (err, job) {
         if (ifErr(t, err, 'provision VM' + desc)) {
@@ -74,9 +79,6 @@ function provisionOne(t, opts, callback) {
         LOG.info({ vm: opts.vm, vm_uuid: job.vm_uuid, job_uuid: job.job_uuid },
             'waiting for VM to provision');
         var startTime = Date.now();
-        /*jsl:ignore*/
-        var timeout;
-        /*jsl:end*/
 
         function checkState() {
             client.getVm({ uuid: job.vm_uuid }, function (err2, res) {
@@ -84,14 +86,14 @@ function provisionOne(t, opts, callback) {
                     return callback(err2);
                 }
 
-                if (res.state == 'running') {
+                if (res.state === 'running') {
                     VMS[res.uuid] = clone(res);
                     LOG.debug({ vm_uuid: job.vm_uuid, vm: res },
                         'successfully provisioned VM');
                     return callback(null, res);
                 }
 
-                if (res.state == 'failed') {
+                if (res.state === 'failed') {
                     LOG.error({
                         job_uuid: job.job_uuid,
                         params: vmParams,
@@ -115,11 +117,11 @@ function provisionOne(t, opts, callback) {
                         job.vm_uuid, job.job_uuid));
                 }
 
-                timeout = setTimeout(checkState, POLL_INTERVAL);
+                setTimeout(checkState, POLL_INTERVAL);
             });
         }
 
-        timeout = setTimeout(checkState, POLL_INTERVAL);
+        setTimeout(checkState, POLL_INTERVAL);
     });
 }
 
@@ -129,28 +131,27 @@ function provisionOne(t, opts, callback) {
  */
 function waitForJob(t, uuid, callback) {
     var client = mod_client.get('wfapi');
-    /*jsl:ignore*/
-    var timeout;
-    /*jsl:end*/
 
     function checkJob() {
         client.get('/jobs/' + uuid, function (err, res) {
             if (err) {
-                return callback(err);
+                callback(err);
+                return;
             }
 
-            if (res.execution != 'running' && res.execution !== 'queued') {
+            if (res.execution !== 'running' && res.execution !== 'queued') {
                 t.equal(res.execution, 'succeeded', 'job '
                     + uuid + ' succeeded');
 
-                return callback(null, res);
+                callback(null, res);
+                return;
             }
 
-            timeout = setTimeout(checkJob, POLL_INTERVAL);
+            setTimeout(checkJob, POLL_INTERVAL);
         });
     }
 
-    timeout = setTimeout(checkJob, POLL_INTERVAL);
+    setTimeout(checkJob, POLL_INTERVAL);
 }
 
 
@@ -161,8 +162,8 @@ function waitForJob(t, uuid, callback) {
 /**
  * Generate an alias for a VM
  */
-function alias(num) {
-    return fmt('fw-test-%d-%d', process.pid, VM_NUM++);
+function alias() {
+    return fmt('fwapi-test-%d-%d', process.pid, VM_NUM++);
 }
 
 
@@ -181,12 +182,15 @@ function del(t, opts, callback) {
         opts.vms.push(opts.vm);
     }
 
-    async.map(opts.vms, function (uuid, cb) {
-        var newOpts = clone(opts);
-        newOpts.uuid = uuid;
-        delOne(t, newOpts, cb);
+    vasync.forEachParallel({
+        inputs: opts.vms,
+        func: function (uuid, cb) {
+            var newOpts = clone(opts);
+            newOpts.uuid = uuid;
+            delOne(t, newOpts, cb);
+        }
     }, function (err, res) {
-        return done(err, res, t, callback);
+        done(err, res, t, callback);
     });
 }
 
@@ -198,7 +202,7 @@ function delAllCreated(t, callback) {
     assert.object(t, 't');
     assert.optionalFunc(callback, 'callback');
 
-    return del(t, { vms: Object.keys(VMS) }, callback);
+    del(t, { vms: Object.keys(VMS) }, callback);
 }
 
 
@@ -218,36 +222,37 @@ function delOne(t, opts, callback) {
     client.deleteVm(delParams, function (err, job) {
         if (ifErr(t, err, 'delete VM' + desc)) {
             t.deepEqual(delParams, {}, 'VM delete params');
-            return callback(err);
+            callback(err);
+            return;
         }
 
         LOG.info({ vm_uuid: job.vm_uuid, job_uuid: job.job_uuid },
             'waiting for VM to delete');
-        /*jsl:ignore*/
-        var timeout;
-        /*jsl:end*/
 
         function checkState() {
             client.getVm({ uuid: job.vm_uuid }, function (err2, res) {
                 if (err2) {
-                    return callback(err2);
+                    callback(err2);
+                    return;
                 }
 
-                if (res.state == 'destroyed') {
-                    return callback(null, res);
+                if (res.state === 'destroyed') {
+                    callback(null, res);
+                    return;
                 }
 
-                if (res.state == 'failed') {
-                    return callback(new VError(
-                        'failed to provision VM %s (job %s)',
+                if (res.state === 'failed') {
+                    callback(new VError(
+                        'failed to delete VM %s (job %s)',
                         job.vm_uuid, job.job_uuid));
+                    return;
                 }
 
-                timeout = setTimeout(checkState, POLL_INTERVAL);
+                setTimeout(checkState, POLL_INTERVAL);
             });
         }
 
-        timeout = setTimeout(checkState, POLL_INTERVAL);
+        setTimeout(checkState, POLL_INTERVAL);
     });
 }
 
@@ -277,11 +282,12 @@ function provision(t, opts, callback) {
                 vms[vmParams.vmNum] = vm;
             }
 
-            return cb();
+            cb(err);
         });
     }, function (err, res) {
         if (err) {
-            return done(err, null, t, callback);
+            done(err, null, t, callback);
+            return;
         }
 
         LOG.info({ vms: vms }, 'provisioned VMs');
@@ -305,7 +311,7 @@ function provision(t, opts, callback) {
             }
         }
 
-        return done(null, vms, t, callback);
+        done(null, vms, t, callback);
     });
 }
 
@@ -408,7 +414,8 @@ function update(t, opts, callback) {
         function (err, job) {
         if (ifErr(t, err, 'update VM' + desc)) {
             t.deepEqual(opts.params, {}, 'VM update params');
-            return done(err, null, t, callback);
+            done(err, null, t, callback);
+            return;
         }
 
         LOG.info({
@@ -419,12 +426,14 @@ function update(t, opts, callback) {
 
         waitForJob(t, job.job_uuid, function (err2, res) {
             if (err2) {
-                return done(err, null, t, callback);
+                done(err2, null, t, callback);
+                return;
             }
 
             client.getVm({ uuid: job.vm_uuid }, function (err3, res2) {
-                if (ifErr(t, err, 'get VM' + desc)) {
-                    return done(err, null, t, callback);
+                if (ifErr(t, err3, 'get VM' + desc)) {
+                    done(err3, null, t, callback);
+                    return;
                 }
 
                 if (opts.exp) {
@@ -445,7 +454,7 @@ function update(t, opts, callback) {
                 }
 
                 VMS[job.vm_uuid] = clone(res2);
-                return done(null, res2, t, callback);
+                done(null, res2, t, callback);
             });
         });
     });

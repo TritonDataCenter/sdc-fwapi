@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright (c) 2014, Joyent, Inc.
+# Copyright 2016, Joyent, Inc.
 #
 
 #
@@ -39,11 +39,15 @@ json_in_file=${test_dir}/config.json.in
 vmapi_url=$(json -f /opt/smartdc/fwapi/config.json vmapi.url)
 imgapi_url=${vmapi_url//vmapi/imgapi}
 cnapi_url=${vmapi_url//vmapi/cnapi}
+papi_url=${vmapi_url//vmapi/papi}
 
 [[ -z ${vmapi_url} ]] && fatal "Could not get vmapi URL from fwapi's config.json"
 
 image_uuid=$(curl -sS ${imgapi_url}/images'?name=sdc-smartos' | json 0.uuid)
 [[ -z ${image_uuid} ]] && fatal "Could not find an image named sdc-smartos in IMGAPI"
+
+billing_id=$(curl -sS ${papi_url}/packages'?name=sample-128M' | json 0.uuid)
+[[ -z ${billing_id} ]] && fatal "Could not find a package named sample-128M in PAPI"
 
 
 servers=( $(curl -sS ${cnapi_url}/servers | json -a uuid setup current_platform | \
@@ -56,6 +60,7 @@ ${dir}/add-test-user
 
 echo "Writing multi-server test config: ${json_file}"
 sed -e "s,{{PROVISION_IMAGE}},${image_uuid}," \
+    -e "s,{{BILLING_ID}},${billing_id}," \
     -e "s,{{SERVER1_UUID}},${servers[0]}," \
     -e "s,{{SERVER2_UUID}},${servers[1]}," \
     -e "s,{{FWAPI_URL}},${vmapi_url//vmapi/fwapi}," \

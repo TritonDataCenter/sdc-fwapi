@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright (c) 2014, Joyent, Inc.
+# Copyright 2016, Joyent, Inc.
 #
 
 #
@@ -131,12 +131,24 @@ fi
 echo ""
 set +o errexit
 
+test_failed=
+
 for file in $test_files $multi_test_files; do
     test_file=$(basename $file)
     echo "# $test_file"
+
     PATH=$NODE_INSTALL/bin:$PATH node $file \
         | tee $OUTPUT_DIR/$test_file.tap
-    [[ "$?" != "0" ]] && [[ -n "$opt_stop_on_failure" ]] && break
+
+    # If a test program crashes, ensure that this
+    # script exits non-zero.
+    if [[ "$?" != "0" ]]; then
+       if [[ -n "$opt_stop_on_failure" ]]; then
+           break
+       else
+           test_failed="true"
+       fi
+   fi
 done
 
 set -o errexit
@@ -170,6 +182,6 @@ if [[ ${fail} -gt 0 ]]; then
 fi
 echo ""
 
-if [[ ${tests} != ${passed} ]]; then
+if [[ -n ${test_failed} || ${tests} != ${passed} ]]; then
     exit 1
 fi

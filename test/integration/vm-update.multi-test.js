@@ -112,21 +112,18 @@ test('Provision VMs', function (t) {
     // that remote VMs get added to other servers.
     var vms = [
         {
-            alias: mod_vm.alias(),
             firewall_enabled: false,
             owner_uuid: OWNERS[0],
             server_uuid: config.test.server1_uuid,
             tags: { }
         },
         {
-            alias: mod_vm.alias(),
             firewall_enabled: false,
             owner_uuid: OWNERS[0],
             server_uuid: config.test.server2_uuid,
             tags: { }
         },
         {
-            alias: mod_vm.alias(),
             firewall_enabled: false,
             owner_uuid: OWNERS[0],
             server_uuid: config.test.server1_uuid,
