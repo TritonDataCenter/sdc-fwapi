@@ -19,6 +19,7 @@ var assert = require('assert-plus');
 var bunyan = require('bunyan');
 var fs = require('fs');
 var restify = require('restify');
+var tritonTracer = require('triton-tracer');
 
 
 
@@ -59,7 +60,6 @@ function loadConfig(configFile) {
  * Main entry point
  */
 function main() {
-    var server;
     var log = bunyan.createLogger({
         name: 'fwapi',
         level: 'info',
@@ -72,31 +72,33 @@ function main() {
         log.level(config.logLevel);
     }
 
-    try {
-        server = fwapi.create({
-            config: config,
-            log: log
-        });
-    } catch (err) {
-        log.error(err, 'Error creating server');
-        process.exit(1);
-    }
+    tritonTracer.init({
+        log: log
+    }, function (/* session */) {
+        var server;
 
-    server.listen(function (lErr) {
-        if (lErr) {
-            throw lErr;
+        try {
+            server = fwapi.create({
+                config: config,
+                log: log
+            });
+        } catch (err) {
+            log.error(err, 'Error creating server');
+            process.exit(1);
         }
 
-        var addr = server.info();
-        log.info('%s listening on <http://%s:%s>',
-            addr.name, addr.address, addr.port);
-    });
+        server.listen(function () {
+            var addr = server.info();
+            log.info('%s listening on <http://%s:%s>',
+                addr.name, addr.address, addr.port);
+        });
 
-    // Try to ensure we clean up properly on exit.
-    process.on('SIGINT', function _cleanup() {
-        log.info('SIGINT: cleaning up');
-        return server.close(function () {
-            process.exit(1);
+        // Try to ensure we clean up properly on exit.
+        process.on('SIGINT', function _cleanup() {
+            log.info('SIGINT: cleaning up');
+            return server.close(function () {
+                process.exit(1);
+            });
         });
     });
 }
