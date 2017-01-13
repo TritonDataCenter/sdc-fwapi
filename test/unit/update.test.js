@@ -5,16 +5,17 @@
  */
 
 /*
- * Copyright (c) 2016, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Unit tests for /rules endpoints
  */
 
+'use strict';
+
 var test = require('tape');
 var h = require('./helpers');
-var mocks = require('./mocks');
 var util = require('util');
 
 
@@ -23,10 +24,8 @@ var util = require('util');
 
 
 
-// Set this to any of the exports in this file to only run that test,
-// plus setup and teardown
-var runOne;
 var FWAPI;
+var MORAY;
 var RULES = [];
 var VMS = [ h.generateVM(), h.generateVM() ];
 
@@ -37,10 +36,12 @@ var VMS = [ h.generateVM(), h.generateVM() ];
 
 
 test('setup', function (t) {
-    h.createClientAndServer(function (err, res) {
+    h.createClientAndServer({}, function (err, res, moray) {
         t.ifError(err, 'server creation');
         t.ok(res, 'client');
+        t.ok(moray, 'moray');
         FWAPI = res;
+        MORAY = moray;
         t.end();
     });
 });
@@ -60,9 +61,9 @@ test('Add rule', function (t) {
     });
 
     FWAPI.createRule(RULES[0], function (err, obj, req, res) {
-        t.ifError(err, 'rule create');
-        if (err) {
-            return t.end();
+        if (h.ifErr(t, err, 'rule create')) {
+            t.end();
+            return;
         }
 
         t.equal(res.statusCode, 202, 'status code');
@@ -72,18 +73,25 @@ test('Add rule', function (t) {
         RULES[0].version = obj.version;
 
         t.deepEqual(obj, RULES[0], 'response');
-        t.deepEqual(h.getMorayUpdates(), [
-            h.morayUpdate('fw.add_rule', RULES[0])
-        ], 'moray updates');
-
-        FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-            t.ifError(err2, 'getRule error');
-            if (err2) {
-                return t.end();
+        h.getMorayUpdates(MORAY, function (err2, updates) {
+            if (h.ifErr(t, err2, 'getMorayUpdates() error')) {
+                t.end();
+                return;
             }
 
-            t.deepEqual(res2, RULES[0], 'getRule');
-            return t.end();
+            t.deepEqual(updates, [
+                h.morayUpdate('fw.add_rule', RULES[0])
+            ], 'moray updates');
+
+            FWAPI.getRule(RULES[0].uuid, function (err3, res2) {
+                if (h.ifErr(t, err3, 'getRule() error')) {
+                    t.end();
+                    return;
+                }
+
+                t.deepEqual(res2, RULES[0], 'getRule');
+                t.end();
+            });
         });
     });
 });
@@ -97,9 +105,9 @@ test('Update rule', function (t) {
     RULES[0].rule = payload.rule;
 
     FWAPI.updateRule(RULES[0].uuid, payload, function (err, obj, req, res) {
-        t.ifError(err, 'rule update');
-        if (err) {
-            return t.end();
+        if (h.ifErr(t, err, 'rule update')) {
+            t.end();
+            return;
         }
 
         t.equal(res.statusCode, 202, 'status code');
@@ -107,74 +115,82 @@ test('Update rule', function (t) {
         RULES[0].version = obj.version;
 
         t.deepEqual(obj, RULES[0], 'response');
-        t.deepEqual(h.getMorayUpdates(), [
-            h.morayUpdate('fw.update_rule', RULES[0])
-        ], 'moray updates');
-
-        FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-            t.ifError(err2, 'getRule error');
-            if (err2) {
-                return t.end();
+        h.getMorayUpdates(MORAY, function (err2, updates) {
+            if (h.ifErr(t, err2, 'getMorayUpdates() error')) {
+                t.end();
+                return;
             }
 
-            t.deepEqual(res2, RULES[0], 'getRule');
-            return t.end();
+            t.deepEqual(updates, [
+                h.morayUpdate('fw.update_rule', RULES[0])
+            ], 'moray updates');
+
+            FWAPI.getRule(RULES[0].uuid, function (err3, res2) {
+                if (h.ifErr(t, err3, 'getRule() error')) {
+                    t.end();
+                    return;
+                }
+
+                t.deepEqual(res2, RULES[0], 'getRule');
+                t.end();
+            });
         });
     });
 });
 
 
 test('Delete rule', function (t) {
-    FWAPI.deleteRule(RULES[0].uuid, function (err, obj, req, res) {
-        t.ifError(err, 'rule delete');
-        if (err) {
-            return t.end();
+    FWAPI.deleteRule(RULES[0].uuid, function (err, _, req, res) {
+        if (h.ifErr(t, err, 'rule delete')) {
+            t.end();
+            return;
         }
 
         t.equal(res.statusCode, 204, 'status code');
 
-        t.deepEqual(h.getMorayUpdates(), [
-            h.morayUpdate('fw.del_rule', RULES[0])
-        ], 'moray updates');
-
-        FWAPI.getRule(RULES[0].uuid, function (err2, res2) {
-            t.ok(err2, 'getRule error');
-            if (!err2) {
-                return t.end();
+        h.getMorayUpdates(MORAY, function (err2, updates) {
+            if (h.ifErr(t, err2, 'getMorayUpdates() error')) {
+                t.end();
+                return;
             }
 
-            t.deepEqual(err2.body, {
-                code: 'ResourceNotFound',
-                message: 'Rule not found'
-            }, 'error body');
+            t.deepEqual(updates, [
+                h.morayUpdate('fw.del_rule', RULES[0])
+            ], 'moray updates');
 
-            FWAPI.deleteRule(RULES[0].uuid, function (err3, res3) {
-                t.ok(err3, 'deleteRule error');
+            FWAPI.getRule(RULES[0].uuid, function (err3, res2) {
+                t.ok(err3, 'getRule error');
                 if (!err3) {
-                    return t.end();
+                    t.end();
+                    return;
                 }
 
                 t.deepEqual(err3.body, {
-                        code: 'ResourceNotFound',
-                        message: 'Rule not found'
+                    code: 'ResourceNotFound',
+                    message: 'Rule not found'
                 }, 'error body');
 
-                return t.end();
-            });
+                FWAPI.deleteRule(RULES[0].uuid, function (err4, res3) {
+                    t.ok(err4, 'deleteRule error');
+                    if (!err4) {
+                        t.end();
+                        return;
+                    }
 
+                    t.deepEqual(err4.body, {
+                        code: 'ResourceNotFound',
+                        message: 'Rule not found'
+                    }, 'error body');
+
+                    t.end();
+                });
+            });
         });
     });
 });
 
 
-
 // --- Teardown
 
 
-
-test('Stop server', function (t) {
-    h.stopServer(function (err) {
-        t.ifError(err, 'server stop');
-        t.end();
-    });
-});
+test('Stop server', h.stopServer);

@@ -5,21 +5,19 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Provision workflow and FWAPI integration tests
  */
 
+'use strict';
+
 var test = require('tape');
-var async = require('async');
 var config = require('../lib/config');
-var fmt = require('util').format;
-var log = require('../lib/log');
 var mod_cn = require('../lib/cn');
 var mod_rule = require('../lib/rule');
-var mod_uuid = require('node-uuid');
 var mod_vm = require('../lib/vm');
 var util = require('util');
 
@@ -80,7 +78,7 @@ test('Add rules', function (t) {
             description: 'allow SSH',
             enabled: true,
             owner_uuid: OWNERS[0],
-            rule: util.format('FROM any TO tag %s ALLOW tcp PORT 22',
+            rule: util.format('FROM any TO tag "%s" ALLOW tcp PORT 22',
                 TAGS.ssh)
         };
 
@@ -95,7 +93,7 @@ test('Add rules', function (t) {
             description: 'allow DNS',
             enabled: true,
             owner_uuid: OWNERS[0],
-            rule: util.format('FROM any TO tag %s ALLOW udp PORT 53',
+            rule: util.format('FROM any TO tag "%s" ALLOW udp PORT 53',
                 TAGS.dns)
         };
 
@@ -146,7 +144,8 @@ test('Provision VMs', function (t) {
             VMS = res;
         }
 
-        return t.end();
+        t.ifError(err, 'Provisioning VMs should succeed');
+        t.end();
     });
 });
 
@@ -225,8 +224,8 @@ test('Add disabled rule', function (t) {
             description: 'allow DB',
             enabled: false,
             owner_uuid: OWNERS[0],
-            rule: util.format('FROM (tag %s = 1 OR tag %s = 2) TO ' +
-                '(tag %s = 1 OR tag %s = 2) ALLOW tcp PORT 5432',
+            rule: util.format('FROM (tag "%s" = "1" OR tag "%s" = "2") TO ' +
+                '(tag "%s" = "1" OR tag "%s" = "2") ALLOW tcp PORT 5432',
                 TAGS.db, TAGS.db, TAGS.db, TAGS.db)
         };
 

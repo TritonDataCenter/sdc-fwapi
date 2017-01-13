@@ -5,21 +5,20 @@
  */
 
 /*
- * Copyright (c) 2016, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Integration tests for listing rules
  */
 
+'use strict';
+
 var test = require('tape');
-var async = require('async');
 var constants = require('../../lib/util/constants');
 var extend = require('xtend');
-var h = require('./helpers');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
-var util = require('util');
 
 
 
@@ -65,13 +64,13 @@ var RULES = [
     {
         enabled: true,
         owner_uuid: OWNERS[1],
-        rule: 'FROM tag foo TO all vms BLOCK udp PORT all'
+        rule: 'FROM tag "foo" TO all vms BLOCK udp PORT all'
     },
     {
         enabled: true,
         owner_uuid: OWNERS[1],
-        rule: 'FROM (tag foo = bar OR tag foo = baz) '
-            + 'TO tag side = two ALLOW tcp (PORT 5003 AND PORT 5004)'
+        rule: 'FROM (tag "foo" = "bar" OR tag "foo" = "baz") '
+            + 'TO tag "side" = "two" ALLOW tcp (PORT 5003 AND PORT 5004)'
     }
 ];
 
@@ -120,12 +119,12 @@ test('list: all ports', function (t) {
         rule: {
             enabled: true,
             owner_uuid: OWNERS[2],
-            rule: 'FROM tag foo TO all vms BLOCK udp PORTS 1 - 200, 1 - 65535'
+            rule: 'FROM tag "foo" TO all vms BLOCK udp PORTS 1 - 200, 1 - 65535'
         },
         exp: {
             enabled: true,
             owner_uuid: OWNERS[2],
-            rule: 'FROM tag foo TO all vms BLOCK udp PORT all'
+            rule: 'FROM tag "foo" TO all vms BLOCK udp PORT all'
         }
     }, function (err) {
         t.ifError(err, 'creating range of all ports should be successful');

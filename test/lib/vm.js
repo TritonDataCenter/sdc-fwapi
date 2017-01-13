@@ -12,6 +12,8 @@
  * Helpers for manipulating VMs
  */
 
+'use strict';
+
 var assert = require('assert-plus');
 var async = require('async');
 var clone = require('clone');
@@ -38,7 +40,7 @@ var VM_PARAMS = {
     billing_id: config.test.billing_id
 };
 var VM_NUM = 0;
-var LOG = mod_log.child({ component: 'vm' });
+var LOG = mod_log.get().child({ component: 'vm' });
 var POLL_INTERVAL = config.test.api_poll_interval;
 var PROV_TIMEOUT = config.test.provision_timeout;
 var VMS = {};
@@ -73,7 +75,8 @@ function provisionOne(t, opts, callback) {
         if (ifErr(t, err, 'provision VM' + desc)) {
             t.deepEqual(vmParams, {}, 'VM params');
             LOG.error({ params: vmParams }, 'failed to create VM');
-            return callback(err);
+            callback(err);
+            return;
         }
 
         LOG.info({ vm: opts.vm, vm_uuid: job.vm_uuid, job_uuid: job.job_uuid },
@@ -83,14 +86,16 @@ function provisionOne(t, opts, callback) {
         function checkState() {
             client.getVm({ uuid: job.vm_uuid }, function (err2, res) {
                 if (err2) {
-                    return callback(err2);
+                    callback(err2);
+                    return;
                 }
 
                 if (res.state === 'running') {
                     VMS[res.uuid] = clone(res);
                     LOG.debug({ vm_uuid: job.vm_uuid, vm: res },
                         'successfully provisioned VM');
-                    return callback(null, res);
+                    callback(null, res);
+                    return;
                 }
 
                 if (res.state === 'failed') {
@@ -100,9 +105,10 @@ function provisionOne(t, opts, callback) {
                         vm_uuid: job.vm_uuid
                     }, 'failed to provision VM');
 
-                    return callback(new VError(
+                    callback(new VError(
                         'failed to provision VM %s (job %s)',
                         job.vm_uuid, job.job_uuid));
+                    return;
                 }
 
                 if (Date.now() - startTime > PROV_TIMEOUT) {
@@ -112,9 +118,10 @@ function provisionOne(t, opts, callback) {
                         vm_uuid: job.vm_uuid
                     }, 'timeout provisioning VM');
 
-                    return callback(new VError(
+                    callback(new VError(
                         'provision of VM %s (job %s) timed out',
                         job.vm_uuid, job.job_uuid));
+                    return;
                 }
 
                 setTimeout(checkState, POLL_INTERVAL);

@@ -5,13 +5,15 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Common test helpers shared between integration and unit tests
  */
 
+
+'use strict';
 
 
 // --- Exports

@@ -5,12 +5,14 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Test helpers for FWAPI integration tests
  */
+
+'use strict';
 
 var common = require('../lib/common');
 

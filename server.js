@@ -5,12 +5,14 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Main entry-point for the firewall API.
  */
+
+'use strict';
 
 var fwapi = require('./lib/app');
 var assert = require('assert-plus');
@@ -80,7 +82,11 @@ function main() {
         process.exit(1);
     }
 
-    server.listen(function () {
+    server.listen(function (lErr) {
+        if (lErr) {
+            throw lErr;
+        }
+
         var addr = server.info();
         log.info('%s listening on <http://%s:%s>',
             addr.name, addr.address, addr.port);

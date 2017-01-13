@@ -5,12 +5,14 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Unit tests for the firewall rule object
  */
+
+'use strict';
 
 var test = require('tape');
 var mod_rule = require('../../lib/rule');
@@ -59,9 +61,9 @@ test('all target types', function (t) {
     var subnets = ['192.168.2.0/24', '10.2.1.0/24'];
 
     var inRule = {
-        rule: util.format('FROM (ip %s OR subnet %s OR tag %s OR vm %s) ',
+        rule: util.format('FROM (ip %s OR subnet %s OR tag "%s" OR vm %s) ',
             ips[0], subnets[0], tags[0], vms[0])
-            + util.format('TO (ip %s OR subnet %s OR tag %s OR vm %s)',
+            + util.format('TO (ip %s OR subnet %s OR tag "%s" OR vm %s)',
             ips[1], subnets[1], tags[1], vms[1])
             + ' ALLOW tcp (PORT 80 AND PORT 81)',
         enabled: true,
@@ -92,14 +94,14 @@ test('all target types', function (t) {
     inRule.uuid = rule.uuid;
     inRule.version = rule.version;
 
-    t.deepEqual(rule.raw(), raw, 'rule.raw()');
+    t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
     t.deepEqual(rule.serialize(), inRule, 'rule.serialize()');
     t.equal(rule.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule.dn');
 
     // Now recreate the rule from the raw UFDS data
-    var rule2 = mod_rule.create(rule.raw(), app);
-    t.deepEqual(rule2.raw(), raw, 'rule2.raw()');
+    var rule2 = mod_rule.create(rule.rawUFDS(), app);
+    t.deepEqual(rule2.rawUFDS(), raw, 'rule2.rawUFDS()');
     t.deepEqual(rule2.serialize(), inRule, 'rule2.serialize()');
     t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule2.dn');
@@ -135,14 +137,14 @@ test('owner_uuid', function (t) {
     inRule.uuid = rule.uuid;
     inRule.version = rule.version;
 
-    t.deepEqual(rule.raw(), raw, 'rule.raw()');
+    t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
     t.deepEqual(rule.serialize(), inRule, 'rule.serialize()');
     t.equal(rule.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule.dn');
 
     // Now recreate the rule from the raw UFDS data
-    var rule2 = mod_rule.create(rule.raw(), app);
-    t.deepEqual(rule2.raw(), raw, 'rule2.raw()');
+    var rule2 = mod_rule.create(rule.rawUFDS(), app);
+    t.deepEqual(rule2.rawUFDS(), raw, 'rule2.rawUFDS()');
     t.deepEqual(rule2.serialize(), inRule, 'rule2.serialize()');
     t.equal(rule2.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule2.dn');
@@ -175,14 +177,14 @@ test('multiple tags with multiple quoted values', function (t) {
         uuid: rule.uuid,
         version: rule.version
     };
-    t.deepEqual(rule.raw(), raw, 'rule.raw()');
+    t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
 
     var serialized = {
         enabled: false,
         owner_uuid: owner,
         rule: 'FROM (tag "김치" = "白김치" '
             + 'OR tag "김치" = "백김치") TO '
-            + '(tag "some tag" = value OR tag some-tag = "another value") '
+            + '(tag "some tag" = "value" OR tag "some-tag" = "another value") '
             + 'ALLOW tcp PORT 80',
         uuid: rule.uuid,
         version: rule.version
@@ -201,8 +203,8 @@ test('multiple tags with multiple quoted values', function (t) {
 
     // Now check that we can reconstruct this data from UFDS
     rule = mod_rule.create(raw, app);
-    t.deepEqual(rule.raw(), raw, 'rule.raw()');
-    t.deepEqual(rule.raw(), raw, 'rule.raw()');
+    t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
+    t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
     t.ok(!rule.allVMs, 'rule.allVMs');
     t.deepEqual(rule.tags, ruleTags, 'rule.tags');
 
@@ -220,7 +222,7 @@ test('global', function (t) {
             owner_uuid: mod_uuid.v4(),
             global: true
         });
-    } catch (pErr) {
+    } catch (_) {
         caught = true;
     }
 

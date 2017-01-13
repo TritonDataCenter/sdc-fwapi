@@ -5,21 +5,21 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Unit tests for /resolve endpoint
  */
 
+'use strict';
+
 var test = require('tape');
 var assert = require('assert-plus');
-var async = require('async');
 var fmt = require('util').format;
-var helpers = require('./helpers');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
-var util = require('util');
+var vasync = require('vasync');
 
 
 
@@ -80,27 +80,82 @@ test('setup', function (t) {
     var rules = [];
     RULES = {
         o0: {
+            unicodeRole: {
+                rule: 'FROM (tag "☂" = "ທ" OR tag "삼겹살" = "불고기") '
+                    + 'TO ip 8.8.8.8 BLOCK udp PORT 53'
+            },
+            escapedTag1: {
+                rule: 'FROM (tag "[" = "*" OR tag "]" = "=") '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            escapedTag2: {
+                rule: 'FROM (tag "*" = "=" OR tag "\\\\") '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            escapedTag3: {
+                rule: 'FROM (tag "\\"" = "*" OR tag "=" = "a") '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            escapedTag4: {
+                rule: 'FROM tag "=" = "*" '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            escapedTag5: {
+                rule: 'FROM tag "<=" = "*" '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            escapedTag6: {
+                rule: 'FROM tag "<=" = "\\)" '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            escapedTag7: {
+                rule: 'FROM tag "\\(" = "\\(" '
+                    + 'TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            commaTag: {
+                rule: 'FROM tag "foo,other" TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            ampersandTag: {
+                rule: 'FROM tag "foo&other" TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            dotTag: {
+                rule: 'FROM tag "foo.other" TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            pipeTag: {
+                rule: 'FROM tag "foo|other" TO ip 8.8.8.8 BLOCK tcp PORT 80'
+            },
+            hopTag1: {
+                rule: 'FROM tag "hasOwnProperty" TO ip 8.8.8.8 BLOCK '
+                    + 'tcp PORT 80'
+            },
+            hopTag2: {
+                rule: 'FROM tag "quux" = "hasOwnProperty" TO ip 8.8.8.8 BLOCK '
+                    + 'tcp PORT 80'
+            },
             otherToRole: {
-                rule: 'FROM tag other TO tag role ALLOW tcp PORT 5432'
+                rule: 'FROM tag "other" TO tag "role" ALLOW tcp PORT 5432'
             },
             vm0ToRoleWeb: {
                 rule: fmt(
-                    'FROM vm %s TO tag role = web ALLOW tcp PORT 80', VMS[0])
+                    'FROM vm %s TO tag "role" = "web" ALLOW tcp PORT 80',
+                    VMS[0])
             },
             fooToRoleWeb: {
-                rule: 'FROM (tag foo = bar OR tag foo = baz) TO tag role = web '
-                    + 'ALLOW tcp PORT 5433'
+                rule: 'FROM (tag "foo" = "bar" OR tag "foo" = "baz") '
+                    + 'TO tag "role" = "web" ALLOW tcp PORT 5433'
             },
             vm1ToRoleOther: {
                 rule: fmt(
-                    'FROM vm %s TO tag role = other ALLOW tcp PORT 81', VMS[1])
+                    'FROM vm %s TO tag "role" = "other" ALLOW tcp PORT 81',
+                    VMS[1])
             },
             nowThenToRoleOther: {
-                rule:
-                    'FROM tag now = then TO tag role = other ALLOW tcp PORT 82'
+                rule: 'FROM tag "now" = "then" TO tag "role" = "other" ALLOW '
+                    + 'tcp PORT 82'
             },
             numOneToNumTwo: {
-                rule: 'FROM tag num = one TO tag num = two ALLOW tcp PORT 55'
+                rule: 'FROM tag "num" = "one" TO tag "num" = "two" ALLOW '
+                    + 'tcp PORT 55'
             }
         },
 
@@ -116,7 +171,7 @@ test('setup', function (t) {
         o2: {
             oneToAll: {
                 owner_uuid: OWNERS[2],
-                rule: 'FROM tag one TO all vms BLOCK udp PORT 55',
+                rule: 'FROM tag "one" TO all vms BLOCK udp PORT 55',
                 enabled: true
             }
         },
@@ -124,7 +179,7 @@ test('setup', function (t) {
         o3: {
             oneToAll: {
                 owner_uuid: OWNERS[3],
-                rule: 'FROM tag one TO all vms ALLOW udp PORT 56',
+                rule: 'FROM tag "one" TO all vms ALLOW udp PORT 56',
                 enabled: true
             }
         },
@@ -132,7 +187,7 @@ test('setup', function (t) {
         o4: {
             allToOne: {
                 owner_uuid: OWNERS[4],
-                rule: 'FROM all vms TO tag one BLOCK udp PORT 57',
+                rule: 'FROM all vms TO tag "one" BLOCK udp PORT 57',
                 enabled: true
             }
         },
@@ -140,7 +195,7 @@ test('setup', function (t) {
         o5: {
             allToOne: {
                 owner_uuid: OWNERS[5],
-                rule: 'FROM all vms TO tag one ALLOW udp PORT 58',
+                rule: 'FROM all vms TO tag "one" ALLOW udp PORT 58',
                 enabled: true
             }
         },
@@ -148,26 +203,27 @@ test('setup', function (t) {
         o6: {
             vmToOne: {
                 owner_uuid: OWNERS[6],
-                rule: fmt('FROM vm %s TO tag one ALLOW udp PORT 59', VMS[4]),
+                rule: fmt('FROM vm %s TO tag "one" ALLOW udp PORT 59', VMS[4]),
                 enabled: true
             },
 
             vmToOneTwo: {
                 owner_uuid: OWNERS[6],
-                rule: fmt('FROM vm %s TO tag one = two ALLOW udp PORT 59',
+                rule: fmt('FROM vm %s TO tag "one" = "two" ALLOW udp PORT 59',
                     VMS[4]),
                 enabled: true
             },
 
             vmToOneThree: {
                 owner_uuid: OWNERS[6],
-                rule: 'FROM any TO tag one = three ALLOW udp PORT 59',
+                rule: 'FROM any TO tag "one" = "three" ALLOW udp PORT 59',
                 enabled: true
             },
 
             vmToMultiTags: {
                 owner_uuid: OWNERS[6],
-                rule: fmt('FROM vm %s TO (tag five = six OR tag three = four) '
+                rule: fmt('FROM vm %s TO '
+                    + '(tag "five" = "six" OR tag "three" = "four") '
                     + 'ALLOW udp PORT 58', VMS[3]),
                 enabled: true
             },
@@ -210,13 +266,17 @@ test('setup', function (t) {
         }
     }
 
-    async.forEachSeries(rules, function (rule, cb) {
-        mod_rule.createAndGet(t, {
-            rule: rule,
-            exp: rule
-        }, cb);
+    vasync.forEachPipeline({
+        inputs: rules,
+        func: function (rule, cb) {
+            mod_rule.createAndGet(t, {
+                rule: rule,
+                exp: rule
+            }, cb);
+        }
     }, function (err) {
-        return t.end();
+        t.ifError(err, 'All creates and gets should succeed');
+        t.end();
     });
 });
 
@@ -499,6 +559,189 @@ test('resolve', function (t) {
             vms: [ VMS[3] ]
         } ],
 
+    [   O_STR[0] + 'escaped tags 1',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '[': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: [ RULES.o0.escapedTag1 ],
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'escaped tags 2',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '*': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: [ RULES.o0.escapedTag2 ],
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'escaped tags 3 (fails on UFDS: quote not stored unescaped)',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '"': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: [ RULES.o0.escapedTag3 ],
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'escaped tags 3 & 4 (fails on UFDS: query finds extra rule)',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '=': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'escapedTag3', 'escapedTag4' ]),
+            tags: { },
+            vms: []
+        } ],
+
+
+    [   O_STR[0] + 'escaped tags 4 (fails on UFDS: query finds 2 extra rules)',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '=': [ '*' ] }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'escapedTag4' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'escaped tags 5',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '<=': [ '*' ] }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'escapedTag5' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'escaped tags 6 (fails on UFDS: paren not stored unescaped)',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '<=': [ ')' ] }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'escapedTag6' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'escaped tags 7 (fails on UFDS: paren not stored unescaped)',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { '(': [ '(' ] }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'escapedTag7' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'tag with comma',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'foo,other': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'commaTag' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'tag with ampersand',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'foo&other': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'ampersandTag' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'tag with dot',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'foo.other': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'dotTag' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'tag with pipe',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'foo|other': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'pipeTag' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'tag name "hasOwnProperty"',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'hasOwnProperty': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'hopTag1' ]),
+            tags: { },
+            vms: []
+        } ],
+
+    [   O_STR[0] + 'tag value "hasOwnProperty"',
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'quux': 'hasOwnProperty' }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [ 'hopTag2' ]),
+            tags: { },
+            vms: []
+        } ],
+
     [   fmt('%sVM 5 (%s)', O_STR[0], VMS[5]),
         {
             owner_uuid: OWNERS[6],
@@ -526,21 +769,85 @@ test('resolve', function (t) {
         } ]
     ];
 
-    async.forEachSeries(exp, function (data, cb) {
-        mod_rule.resolve(t, {
-            desc: ': ' + data[0],
-            params: data[1],
-            exp: data[2]
-        }, cb);
+    vasync.forEachPipeline({
+        inputs: exp,
+        func: function (data, cb) {
+            mod_rule.resolve(t, {
+                desc: ': ' + data[0],
+                params: data[1],
+                exp: data[2]
+            }, cb);
 
+        }
     }, function (err) {
-        return t.end();
+        t.ifError(err, 'All queries should resolve');
+        t.end();
     });
 });
 
 
 test('list', function (t) {
     var exp = [
+    [   { owner_uuid: OWNERS[0], tag: 'other' },
+        oRules(0, [ 'otherToRole' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '[' },
+        oRules(0, [ 'escapedTag1' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: ']' },
+        oRules(0, [ 'escapedTag1' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: ')' },
+        oRules(0, [])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '(((' },
+        oRules(0, [])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: ')))' },
+        oRules(0, [])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '*' },
+        oRules(0, [ 'escapedTag2' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '<=' },
+        oRules(0, [ 'escapedTag5', 'escapedTag6' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: 'foo,other' },
+        oRules(0, [ 'commaTag' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: 'foo&other' },
+        oRules(0, [ 'ampersandTag' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: 'foo.other' },
+        oRules(0, [ 'dotTag' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: 'foo|other' },
+        oRules(0, [ 'pipeTag' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: 'hasOwnProperty' },
+        oRules(0, [ 'hopTag1' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '☂' },
+        oRules(0, [ 'unicodeRole' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '삼겹살' },
+        oRules(0, [ 'unicodeRole' ])
+    ],
+
     [   { owner_uuid: OWNERS[0], tag: 'role' },
         oRules(0, [ 'otherToRole', 'vm0ToRoleWeb', 'fooToRoleWeb',
             'vm1ToRoleOther', 'nowThenToRoleOther' ])
@@ -572,14 +879,53 @@ test('list', function (t) {
 
     ];
 
-    async.forEachSeries(exp, function (data, cb) {
-        mod_rule.list(t, {
-            params: data[0],
-            exp: data[1]
-        }, cb);
+    vasync.forEachPipeline({
+        inputs: exp,
+        func: function (data, cb) {
+            mod_rule.list(t, {
+                params: data[0],
+                exp: data[1]
+            }, cb);
 
+        }
     }, function (err) {
-        return t.end();
+        t.ifError(err, 'Querying rules should succeed');
+        t.end();
+    });
+});
+
+
+test('list (these fail with UFDS)', function (t) {
+    var exp = [
+    [   { owner_uuid: OWNERS[0], tag: '\\' },
+        oRules(0, [ 'escapedTag2' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '"' },
+        oRules(0, [ 'escapedTag3' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '=' },
+        oRules(0, [ 'escapedTag3', 'escapedTag4' ])
+    ],
+
+    [   { owner_uuid: OWNERS[0], tag: '(' },
+        oRules(0, [ 'escapedTag7' ])
+    ]
+
+    ];
+
+    vasync.forEachPipeline({
+        inputs: exp,
+        func: function (data, cb) {
+            mod_rule.list(t, {
+                params: data[0],
+                exp: data[1]
+            }, cb);
+        }
+    }, function (err) {
+        t.ifError(err, 'Querying rules should succeed');
+        t.end();
     });
 });
 

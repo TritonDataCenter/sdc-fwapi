@@ -5,18 +5,19 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Update tests for /rules endpoints
  */
 
+'use strict';
+
 var test = require('tape');
 var async = require('async');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
-var util = require('util');
 
 
 
@@ -39,7 +40,7 @@ test('Add rule', function (t) {
     RULES.push({
         enabled: true,
         owner_uuid: OWNERS[0],
-        rule: 'FROM all vms TO tag test BLOCK tcp PORT 8000'
+        rule: 'FROM all vms TO tag "test" BLOCK tcp PORT 8000'
     });
 
     mod_rule.create(t, {
@@ -49,12 +50,21 @@ test('Add rule', function (t) {
 });
 
 
+test('Adding same rule again fails', function (t) {
+    mod_rule.create(t, {
+        rule: RULES[0],
+        expCode: 422,
+        expErr: mod_rule.alreadyExistsErr
+    });
+});
+
+
 test('Update rule', function (t) {
     var exp = [
     [
         'remove all vms',
         {
-            rule: 'FROM ip 10.0.0.1 TO tag test BLOCK '
+            rule: 'FROM ip 10.0.0.1 TO tag "test" BLOCK '
                 + 'tcp PORT 8000'
         }
 
@@ -62,35 +72,35 @@ test('Update rule', function (t) {
         'add 2 IPs',
         {
             rule: 'FROM (ip 10.0.0.1 OR ip 10.0.0.2 OR ip 10.0.0.3) TO '
-                + 'tag test BLOCK tcp PORT 8000'
+                + 'tag "test" BLOCK tcp PORT 8000'
         }
 
     ], [
         'remove 1 IP',
         {
             rule: 'FROM (ip 10.0.0.1 OR ip 10.0.0.3) TO '
-                + 'tag test BLOCK tcp PORT 8000'
+                + 'tag "test" BLOCK tcp PORT 8000'
         }
 
     ], [
         'add a tag',
         {
             rule: 'FROM (ip 10.0.0.1 OR ip 10.0.0.3) TO '
-                + '(tag test OR tag test2) BLOCK tcp PORT 8000'
+                + '(tag "test" OR tag "test2") BLOCK tcp PORT 8000'
         }
 
     ], [
         'add a value to a tag',
         {
             rule: 'FROM (ip 10.0.0.1 OR ip 10.0.0.3) TO '
-                + '(tag test OR tag test2 = foo) BLOCK tcp PORT 8000'
+                + '(tag "test" OR tag "test2" = "foo") BLOCK tcp PORT 8000'
         }
 
     ], [
         'add another value to a tag',
         {
             rule: 'FROM (ip 10.0.0.1 OR ip 10.0.0.3) TO '
-                + '(tag test OR tag test2 = foo OR tag test2 = foo2) '
+                + '(tag "test" OR tag "test2" = "foo" OR tag "test2" = "foo2") '
                 + 'BLOCK tcp PORT 8000'
         }
 
@@ -98,7 +108,7 @@ test('Update rule', function (t) {
         'remove a tag and value',
         {
             rule: 'FROM (ip 10.0.0.1 OR ip 10.0.0.3) TO '
-                + 'tag test BLOCK tcp PORT 8000'
+                + 'tag "test" BLOCK tcp PORT 8000'
         }
 
     ], [

@@ -12,6 +12,8 @@
  * Provision workflow and FWAPI integration tests
  */
 
+'use strict';
+
 var test = require('tape');
 var config = require('../lib/config');
 var mod_cn = require('../lib/cn');
@@ -75,7 +77,7 @@ test('Add rules', function (t) {
             enabled: true,
             owner_uuid: OWNERS[0],
             rule: util.format(
-                'FROM tag %s = one TO tag %s = two ALLOW tcp PORT 22',
+                'FROM tag "%s" = "one" TO tag "%s" = "two" ALLOW tcp PORT 22',
                 TAGS.role, TAGS.role)
         };
 
@@ -91,7 +93,7 @@ test('Add rules', function (t) {
             enabled: true,
             owner_uuid: OWNERS[0],
             rule: util.format(
-                'FROM tag %s TO tag %s ALLOW tcp PORT 5432',
+                'FROM tag "%s" TO tag "%s" ALLOW tcp PORT 5432',
                 TAGS.web, TAGS.db)
         };
 

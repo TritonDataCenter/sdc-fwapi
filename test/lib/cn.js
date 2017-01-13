@@ -12,6 +12,8 @@
  * CN interaction helpers
  */
 
+'use strict';
+
 var assert = require('assert-plus');
 var clone = require('clone');
 var common = require('./common');
@@ -20,8 +22,8 @@ var done = common.done;
 var ifErr = common.ifErr;
 var fmt = require('util').format;
 var mod_client = require('./client');
+var mod_jsprim = require('jsprim');
 var mod_log = require('./log');
-var mod_obj = require('../../lib/util/obj.js');
 var restify = require('restify');
 var vasync = require('vasync');
 var VError = require('verror').VError;
@@ -33,7 +35,7 @@ var VError = require('verror').VError;
 
 
 var ADMIN_IPS = {};
-var LOG = mod_log.child({ component: 'cn' });
+var LOG = mod_log.get().child({ component: 'cn' });
 var NOT_FOUND_ERR = {
     code: 'ResourceNotFound',
     message: 'rule not found'
@@ -67,36 +69,34 @@ function checkUrl(t, opts, callback) {
 
     getClient(t, opts.server_uuid, function (err, client) {
         if (err) {
-            return callback(err);
+            callback(err);
+            return;
         }
 
         var start = Date.now();
-        /*jsl:ignore*/
-        var timeout;
-        /*jsl:end*/
 
         function checkIt() {
             client.get(opts.url, function (err2, req, res, obj) {
                 var elapsed = Date.now() - start;
 
-                if (err2 && err2.body && err2.body.code == opts.errCode &&
+                if (err2 && err2.body && err2.body.code === opts.errCode &&
                     (elapsed < POLL_TIMEOUT)) {
 
                     // We haven't hit our timeout yet, so keep trying
                     LOG.trace({ start: start.toString(), elapsed: elapsed },
                         'timeout not hit: retrying' + opts.desc);
-                    timeout = setTimeout(checkIt, POLL_INTERVAL);
+                    setTimeout(checkIt, POLL_INTERVAL);
                     return;
                 }
 
                 LOG.debug({ start: start.toString(), elapsed: elapsed },
                     'poll timeout exceeded' + opts.desc);
 
-                return callback(err2, req, res, obj);
+                callback(err2, req, res, obj);
             });
         }
 
-        timeout = setTimeout(checkIt, POLL_INTERVAL);
+        setTimeout(checkIt, POLL_INTERVAL);
     });
 }
 
@@ -132,7 +132,7 @@ function createRemoteVM(vm) {
         });
     }
 
-    if (mod_obj.isEmpty(ips)) {
+    if (mod_jsprim.isEmpty(ips)) {
         err = new VError(
             'Remote VM "%s": missing IPs', uuid);
         err.details = vm;
@@ -141,7 +141,7 @@ function createRemoteVM(vm) {
 
     rvm.ips = Object.keys(ips).sort();
 
-    if (vm.hasOwnProperty('tags') && !mod_obj.isEmpty(vm.tags)) {
+    if (mod_jsprim.hasKey(vm, 'tags') && !mod_jsprim.isEmpty(vm.tags)) {
         rvm.tags = {};
         for (var t in vm.tags) {
             rvm.tags[t] = vm.tags[t];
@@ -162,7 +162,8 @@ function createRemoteVM(vm) {
  */
 function getAdminIP(t, uuid, callback) {
     if (ADMIN_IPS.hasOwnProperty(uuid)) {
-        return callback(null, ADMIN_IPS[uuid]);
+        callback(null, ADMIN_IPS[uuid]);
+        return;
     }
 
     var napi = mod_client.get('napi');

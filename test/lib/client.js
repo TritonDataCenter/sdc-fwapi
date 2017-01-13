@@ -5,12 +5,14 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Test helpers for dealing with SDC clients
  */
+
+'use strict';
 
 var config = require('./config');
 var RestifyClient = require('sdc-clients/lib/restifyclient');
@@ -62,5 +64,6 @@ function getClient(type) {
 
 
 module.exports = {
+    CLIENTS: CLIENTS,
     get: getClient
 };

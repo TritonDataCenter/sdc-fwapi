@@ -5,16 +5,17 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Mock objects for FWAPI unit tests
  */
 
+'use strict';
+
 var EventEmitter = require('events').EventEmitter;
-var mockMoray = require('../lib/mock-moray');
-var mod_uuid = require('node-uuid');
+var mod_filter = require('moray-filter');
 var util = require('util');
 var VError = require('verror').VError;
 
@@ -22,26 +23,27 @@ var VError = require('verror').VError;
 
 // --- Globals
 
-
-
-var LOG;
+var UFDS_CONNECTED = true;
 var UFDS_RULES = {};
-
 
 
 // --- sdc-clients: UFDS
 
 
 
-function fakeUFDSclient() {
+function FakeUFDSclient() {
     var self = this;
     EventEmitter.call(this);
     process.nextTick(function () {
         self.emit('connect');
     });
 }
+util.inherits(FakeUFDSclient, EventEmitter);
 
-util.inherits(fakeUFDSclient, EventEmitter);
+
+Object.defineProperty(FakeUFDSclient.prototype, 'connected', {
+    get: function () { return UFDS_CONNECTED; }
+});
 
 
 function ruleUUIDfromDN(dn) {
@@ -51,7 +53,7 @@ function ruleUUIDfromDN(dn) {
 }
 
 
-fakeUFDSclient.prototype.add = function (dn, raw, callback) {
+FakeUFDSclient.prototype.add = function (dn, raw, callback) {
     var ruleUUID = ruleUUIDfromDN(dn);
     if (ruleUUID) {
         UFDS_RULES[ruleUUID] = raw;
@@ -61,7 +63,7 @@ fakeUFDSclient.prototype.add = function (dn, raw, callback) {
 };
 
 
-fakeUFDSclient.prototype.del = function (dn, callback) {
+FakeUFDSclient.prototype.del = function (dn, callback) {
     var ruleUUID = ruleUUIDfromDN(dn);
     if (ruleUUID) {
         if (!UFDS_RULES.hasOwnProperty(ruleUUID)) {
@@ -75,12 +77,12 @@ fakeUFDSclient.prototype.del = function (dn, callback) {
 };
 
 
-fakeUFDSclient.prototype.close = function (callback) {
+FakeUFDSclient.prototype.close = function (callback) {
     return callback();
 };
 
 
-fakeUFDSclient.prototype.modify = function (dn, change, callback) {
+FakeUFDSclient.prototype.modify = function (dn, change, callback) {
     var ruleUUID = ruleUUIDfromDN(dn);
     if (ruleUUID) {
         UFDS_RULES[ruleUUID] = change.modification;
@@ -90,17 +92,31 @@ fakeUFDSclient.prototype.modify = function (dn, change, callback) {
 };
 
 
-fakeUFDSclient.prototype.search = function (dn, opts, callback) {
+FakeUFDSclient.prototype.search = function (dn, opts, callback) {
+    var rule;
+
     if (opts.scope === 'base') {
         var ruleUUID = ruleUUIDfromDN(dn);
-        var rule = UFDS_RULES[ruleUUIDfromDN(dn)];
+        rule = UFDS_RULES[ruleUUID];
         if (!ruleUUID || !rule) {
-            return callback(null, []);
+            callback(null, []);
+            return;
         }
-        return callback(null, [ rule ]);
+        callback(null, [ rule ]);
+        return;
+    } else if (opts.scope === 'sub') {
+        var results = [];
+        var filter = mod_filter.parse(opts.filter);
+        for (rule in UFDS_RULES) {
+            if (filter.matches(UFDS_RULES[rule])) {
+                results.push(UFDS_RULES[rule]);
+            }
+        }
+        callback(null, results);
+        return;
     }
 
-    return callback(new Error('xxxx'));
+    callback(new Error('xxxx'));
 };
 
 
@@ -118,20 +134,13 @@ function fakeVMAPIclient() {
 module.exports = {
     // -- mocks
 
-    moray: mockMoray,
-
     'sdc-clients': {
         VMAPI: fakeVMAPIclient
     },
 
-    ufds: fakeUFDSclient,
+    ufds: FakeUFDSclient,
 
-    // -- mock data
-    set _LOGGER(val) {
-        LOG = val;
-    },
-
-    get _BUCKETS() {
-        return mockMoray._buckets;
+    set ufdsConnected(val) {
+        UFDS_CONNECTED = val;
     }
 };

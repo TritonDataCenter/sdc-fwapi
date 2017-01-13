@@ -5,19 +5,18 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2017, Joyent, Inc.
  */
 
 /*
  * Integration tests for global rules
  */
 
+'use strict';
+
 var test = require('tape');
-var async = require('async');
-var h = require('./helpers');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
-var util = require('util');
 
 
 
@@ -26,12 +25,12 @@ var util = require('util');
 
 
 var FORBIDDEN_BODY = {
-    code : 'Forbidden',
-    message : 'owner does not match',
-    errors : [ {
-        'field' : 'owner_uuid',
-        'code' : 'InvalidParameter',
-        'message' : 'owner_uuid does not match'
+    code: 'Forbidden',
+    message: 'owner does not match',
+    errors: [ {
+        'field': 'owner_uuid',
+        'code': 'InvalidParameter',
+        'message': 'owner_uuid does not match'
     } ]
 };
 var OWNERS = [ mod_uuid.v4() ];
