@@ -40,6 +40,7 @@ test('setup', function (t) {
 
 require('../integration/get.test.js');
 require('../integration/global.test.js');
+require('../integration/invalid.test.js');
 require('../integration/list.test.js');
 require('../integration/resolve.test.js');
 require('../integration/update.test.js');

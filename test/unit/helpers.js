@@ -257,19 +257,20 @@ function stopPG() {
  * Stops the test FWAPI server
  */
 function stopServer(t) {
-    if (!MULTI_SUITE_RUN) {
-        stopPG();
+    function done(err) {
+        if (!MULTI_SUITE_RUN) {
+            stopPG();
+        }
+        t.ifError(err, 'Server stop');
+        t.end();
     }
 
-    if (!SERVER) {
-        t.end();
+    if (SERVER === null) {
+        done();
         return;
     }
 
-    SERVER.close(function (err) {
-        t.ifError(err, 'Server stop');
-        t.end();
-    });
+    SERVER.close(done);
     SERVER = null;
 }
 
