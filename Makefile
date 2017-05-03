@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright 2016, Joyent, Inc.
+# Copyright 2017, Joyent, Inc.
 #
 
 #
@@ -68,7 +68,9 @@ all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS) sdc-scripts
 	$(NPM) install --production
 
 $(ESLINT): | $(NPM_EXEC)
-	$(NPM) install
+	$(NPM) install \
+	    eslint@`json -f package.json devDependencies.eslint` \
+	    eslint-plugin-joyent@`json -f package.json devDependencies.eslint-plugin-joyent`
 
 $(TAPE): | $(NPM_EXEC)
 	$(NPM) install
