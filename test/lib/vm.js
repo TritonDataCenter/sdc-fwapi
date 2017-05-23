@@ -15,7 +15,6 @@
 'use strict';
 
 var assert = require('assert-plus');
-var async = require('async');
 var clone = require('clone');
 var common = require('./common');
 var config = require('./config');
@@ -278,7 +277,7 @@ function provision(t, opts, callback) {
         opts.vms[v].vmNum = v;
     }
 
-    async.map(opts.vms, function (vmParams, cb) {
+    function doProvision(vmParams, cb) {
         var newOpts = clone(opts);
         newOpts.vm = vmParams;
 
@@ -291,7 +290,12 @@ function provision(t, opts, callback) {
 
             cb(err);
         });
-    }, function (err, res) {
+    }
+
+    vasync.forEachPipeline({
+        inputs: opts.vms,
+        func: doProvision
+    }, function (err) {
         if (err) {
             done(err, null, t, callback);
             return;

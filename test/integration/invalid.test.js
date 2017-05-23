@@ -100,7 +100,7 @@ function createPayload(ruleTxt) {
 
     [ 'rule: bad ICMP type',
       createPayload('FROM all vms TO ip 192.168.5.4 BLOCK ICMP TYPE 260'),
-      [ mod_err.invalidParam('rule', 'ICMP type \"260\" is invalid') ] ]
+      [ mod_err.invalidParam('rule', 'ICMP type "260" is invalid') ] ]
 ].forEach(function (cfg) {
     test('Invalid rule: ' + cfg[0], function (t) {
         mod_rule.create(t, {

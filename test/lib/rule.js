@@ -15,7 +15,6 @@
 'use strict';
 
 var assert = require('assert-plus');
-var async = require('async');
 var clone = require('clone');
 var common = require('./common');
 var done = common.done;
@@ -237,15 +236,18 @@ function delAllCreated(t, callback) {
 
     LOG.debug({ toDel: toDel }, 'deleting all created rules');
 
-    async.forEachSeries(toDel, function (uuid, cb) {
-        delAndGet(t, {
-            uuid: uuid
-        }, function () {
-            // Ignore the error and plow on
-            return cb();
-        });
+    mod_vasync.forEachPipeline({
+        inputs: toDel,
+        func: function doDel(uuid, cb) {
+            delAndGet(t, {
+                uuid: uuid
+            }, function (_) {
+                // Ignore the error and plow on
+                cb(null);
+            });
+        }
     }, function (err) {
-        return done(err, toDel, t, callback);
+        done(err, toDel, t, callback);
     });
 }
 

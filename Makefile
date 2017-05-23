@@ -36,7 +36,7 @@ ESLINT_CONF	= tools/eslint.node.conf
 ESLINT_FILES	= $(JS_FILES)
 JSON_FILES	:= config.json.sample package.json
 JSSTYLE_FILES	 = $(JS_FILES)
-JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
+JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0,strict-indent=true
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
 
 

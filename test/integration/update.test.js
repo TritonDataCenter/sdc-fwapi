@@ -15,9 +15,9 @@
 'use strict';
 
 var test = require('tape');
-var async = require('async');
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('node-uuid');
+var vasync = require('vasync');
 
 
 
@@ -120,15 +120,21 @@ test('Update rule', function (t) {
     ]
     ];
 
-    async.forEachSeries(exp, function (data, cb) {
+    function doUpdate(data, cb) {
         t.ok(data[0], '# ' + data[0]);
         mod_rule.updateAndGet(t, {
             uuid: RULES[0].uuid,
             params: data[1],
             partialExp: data[1]
         }, cb);
-    }, function () {
-        return t.end();
+    }
+
+    vasync.forEachPipeline({
+        inputs: exp,
+        func: doUpdate
+    }, function (err) {
+        t.ifError(err, 'doUpdate() error');
+        t.end();
     });
 });
 
