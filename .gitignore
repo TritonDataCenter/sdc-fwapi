@@ -4,8 +4,8 @@
 build
 docs/*.json
 docs/*.html
-docs/examples.restdown
-docs/rules.restdown
+docs/examples.md
+docs/rules.md
 cscope.in.out
 cscope.po.out
 cscope.out
