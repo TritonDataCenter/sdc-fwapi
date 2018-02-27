@@ -157,6 +157,7 @@ FROM or TO side of the rule.
 | fields     | Array of Strings | List of extra fields to return |
 | ip         | String           | Filter: IP                     |
 | owner_uuid | UUID             | Filter: Owner UUID             |
+| protocol   | String           | Filter: Protocol (e.g., "tcp") |
 | subnet     | String           | Filter: Subnet CIDR            |
 | tag        | String           | Filter: Tag                    |
 | vm         | UUID             | Filter: VM UUID                |

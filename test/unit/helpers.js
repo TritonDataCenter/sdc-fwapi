@@ -23,7 +23,7 @@ var mod_common = require('../lib/common');
 var mod_log = require('../lib/log');
 var mod_moray = require('../../lib/moray');
 var mod_update = require('../../lib/update');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 var moray_sandbox = require('moray-sandbox');
 var os = require('os');
 
@@ -33,7 +33,7 @@ var os = require('os');
 
 
 var CUR_IP = 1;
-var FWRULE_VERSION = process.env.FWRULE_VERSION || 3;
+var FWRULE_VERSION = process.env.FWRULE_VERSION || 4;
 var MOCKS_ENABLED = false;
 var MULTI_SUITE_RUN = false;
 var OWNER_UUID = mod_uuid.v4();

@@ -16,7 +16,7 @@
 
 var test = require('tape');
 var mod_rule = require('../lib/rule');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 
 
 
@@ -25,6 +25,7 @@ var mod_uuid = require('node-uuid');
 
 
 var OWNERS = [
+    mod_uuid.v4(),
     mod_uuid.v4(),
     mod_uuid.v4()
 ];
@@ -50,6 +51,7 @@ var RULES = [
         global: true,
         rule: 'FROM any TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
+
     /* IP rule, VM rule, subnet rule */
     {
         enabled: true,
@@ -82,6 +84,23 @@ var RULES = [
         owner_uuid: OWNERS[0],
         rule: 'FROM vm ' + VM_UUIDS[1] +
             ' TO tag "foo" = "baz" ALLOW tcp PORT 5010'
+    },
+
+    /* FWRULE_VERSION 4 features */
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM tag "a" TO tag "b" ALLOW tcp PORT 80 PRIORITY 50'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM tag "a" TO tag "b" ALLOW ah'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM tag "a" TO tag "b" ALLOW esp'
     }
 ];
 
@@ -379,7 +398,7 @@ test('get: enabled rule owner0', function (t) {
     mod_rule.list(t, {
         params: { enabled: true, owner_uuid: RULES[0].owner_uuid },
         expCode: 200,
-        exp: [ RULES[0] ].concat(RULES.slice(3, RULES.length))
+        exp: [ RULES[0] ].concat(RULES.slice(3, 9))
     });
 });
 
@@ -411,7 +430,7 @@ test('get: action rule allow owner0', function (t) {
     mod_rule.list(t, {
         params: { action: 'allow', owner_uuid: RULES[0].owner_uuid },
         expCode: 200,
-        exp: [ RULES[0] ].concat(RULES.slice(3, RULES.length))
+        exp: [ RULES[0] ].concat(RULES.slice(3, 9))
     });
 });
 
@@ -492,7 +511,7 @@ test('get: tag rule', function (t) {
     mod_rule.list(t, {
         params: { tag: 'foo', owner_uuid: OWNERS[0] },
         expCode: 200,
-        exp: RULES.slice(3, RULES.length)
+        exp: RULES.slice(3, 9)
     });
 });
 

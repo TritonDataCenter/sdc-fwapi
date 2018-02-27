@@ -23,7 +23,7 @@ var ifErr = common.ifErr;
 var mod_client = require('./client');
 var mod_err = require('../../lib/errors');
 var mod_trunc = require('./trunc');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 var mod_log = require('./log');
 var mod_vasync = require('vasync');
 

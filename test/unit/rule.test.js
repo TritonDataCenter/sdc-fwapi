@@ -16,7 +16,7 @@
 
 var test = require('tape');
 var mod_rule = require('../../lib/rule');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 var util = require('util');
 var util_ip = require('../../lib/util/ip');
 

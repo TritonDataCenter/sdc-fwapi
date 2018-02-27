@@ -18,7 +18,7 @@ var test = require('tape');
 var assert = require('assert-plus');
 var fmt = require('util').format;
 var mod_rule = require('../lib/rule');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 var vasync = require('vasync');
 
 

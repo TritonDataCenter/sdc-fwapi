@@ -16,7 +16,7 @@
 
 var assert = require('assert-plus');
 var fwrule = require('fwrule');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 
 var fmt = require('util').format;
 

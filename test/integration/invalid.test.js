@@ -17,7 +17,7 @@
 var test = require('tape');
 var mod_err = require('../../lib/errors');
 var mod_rule = require('../lib/rule');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 
 
 // --- Globals

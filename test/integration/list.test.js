@@ -18,7 +18,7 @@ var test = require('tape');
 var constants = require('../../lib/util/constants');
 var extend = require('xtend');
 var mod_rule = require('../lib/rule');
-var mod_uuid = require('node-uuid');
+var mod_uuid = require('uuid');
 
 
 
@@ -71,6 +71,19 @@ var RULES = [
         owner_uuid: OWNERS[1],
         rule: 'FROM (tag "foo" = "bar" OR tag "foo" = "baz") '
             + 'TO tag "side" = "two" ALLOW tcp (PORT 5003 AND PORT 5004)'
+    },
+
+    // OWNERS[2]
+
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM any TO all vms ALLOW ah'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM any TO all vms ALLOW esp'
     }
 ];
 
@@ -185,6 +198,34 @@ test('list: parsed fields', function (t) {
     });
 });
 
+
+test('list: IPsec protocols', function (t) {
+    t.plan(2);
+
+    t.test('list: IPsec protocols - AH', function (t2) {
+        mod_rule.list(t2, {
+            params: {
+                owner_uuid: OWNERS[2],
+                protocol: 'ah'
+            },
+            exp: [
+                RULES[7]
+            ]
+        });
+    });
+
+    t.test('list: IPsec protocols - ESP', function (t2) {
+        mod_rule.list(t2, {
+            params: {
+                owner_uuid: OWNERS[2],
+                protocol: 'esp'
+            },
+            exp: [
+                RULES[8]
+            ]
+        });
+    });
+});
 
 
 // --- Teardown
