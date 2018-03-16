@@ -19,11 +19,12 @@ set -o errexit
 TOP=$(cd $(dirname $0)/../; pwd)
 NODE="root@$1"
 
-if [[ -z "$FWAPI_ZONE" ]]; then
-    FWAPI_ZONE=$(ssh $NODE "/opt/smartdc/bin/sdc-vmapi /vms" 2>/dev/null \
+while [[ -z "$FWAPI_ZONE" ]]; do
+    echo "Trying to get FWAPI zone"
+    FWAPI_ZONE=$(ssh $NODE "/opt/smartdc/bin/sdc-vmapi /vms?alias=fwapi0" 2>/dev/null \
         | json -H -c 'this.tags && this.tags.smartdc_role === "fwapi"' \
             -c 'this.state === "running"' 0.uuid)
-fi
+done
 echo "FWAPI_ZONE: $FWAPI_ZONE"
 
 extraOpts=
@@ -34,7 +35,7 @@ else
     ssh $NODE rm -rf /zones/$FWAPI_ZONE/root/opt/smartdc/fwapi/node_modules
 fi
 
-rsync -av ${TOP}/ \
+rsync -avz ${TOP}/ \
     $NODE:/zones/$FWAPI_ZONE/root/opt/smartdc/fwapi/ \
     $extraOpts \
     --exclude .git/ \

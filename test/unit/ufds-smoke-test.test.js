@@ -293,15 +293,17 @@ test('Search for rule 1', function (t) {
     t.plan(3);
 
     t.test('Search for VMS[0]', function (t2) {
-        FWAPI.listRules({ vm: VMS[0] }, checkResult(t2));
+        FWAPI.listRules({ vm: VMS[0].uuid }, checkResult(t2));
     });
 
     t.test('Search for VMS[1]', function (t2) {
-        FWAPI.listRules({ vm: VMS[1] }, checkResult(t2));
+        FWAPI.listRules({ vm: VMS[1].uuid }, checkResult(t2));
     });
 
     t.test('Search for VMS', function (t2) {
-        FWAPI.listRules({ vm: VMS }, checkResult(t2));
+        FWAPI.listRules({
+            vm: [ VMS[0].uuid, VMS[1].uuid ]
+        }, checkResult(t2));
     });
 });
 
