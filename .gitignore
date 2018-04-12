@@ -8,6 +8,7 @@ docs/*.json
 docs/*.html
 docs/examples.md
 docs/rules.md
+docs/media/img/*.svg
 cscope.in.out
 cscope.po.out
 cscope.out

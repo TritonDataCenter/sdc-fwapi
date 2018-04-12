@@ -102,6 +102,7 @@ node_modules/fwrule/docs/examples.md: node_modules/fwrule
 docs/rules.md: node_modules/fwrule/docs/rules.md
 	$(TOP)/tools/restdown-header "Firewall API Rule Syntax" > docs/rules.md
 	cat node_modules/fwrule/docs/rules.md >> docs/rules.md
+	cp node_modules/fwrule/docs/media/img/*.svg docs/media/img/
 
 docs/examples.md: node_modules/fwrule/docs/examples.md
 	$(TOP)/tools/restdown-header "Firewall API Examples" > docs/examples.md
