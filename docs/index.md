@@ -10,7 +10,7 @@ apisections: Rules, Firewalls
 -->
 
 <!--
-    Copyright (c) 2015, Joyent, Inc.
+    Copyright (c) 2018, Joyent, Inc.
 -->
 
 # FWAPI (Firewall API)
@@ -124,18 +124,17 @@ There are two more steps necessary:
 * Updating all webserver VMs with tag **www**
 * Updating all database VMs with tag **db**
 
-Please see the [examples](examples.html) page for more examples.
+Please see the [CloudAPI Guide](https://github.com/joyent/sdc-cloudapi/blob/master/docs/index.md#firewallrules)
+for more examples.
 
 # Rule Syntax
 
-Rules are written in a Doman Specific Language (DSL). References for it are:
+Rules are written in a Doman Specific Language (DSL). References for the rule syntax
+can be found in:
 
-* The [rule syntax guide](rules.html) has the complete syntax.
-* The [railroad diagram](railroad-diagram.xhtml) has an easier to read
-  format.
-* The [cloudapi firewall rules documentation](http://wiki.joyent.com/wiki/display/jpc2/Firewall+Rules)
-  is probably much clearer.
-
+* [Rule Syntax Guide](rules.html)
+* [Cloud Firewall Rules Reference](https://docs.joyent.com/public-cloud/network/firewall/cloud-firewall-rules-reference)
+* [CloudAPI Guide - Firewall Rules](https://github.com/joyent/sdc-cloudapi/blob/master/docs/index.md#firewallrules)
 
 # Rules
 
@@ -473,3 +472,16 @@ something).
 ## 2015-03-23
 
 - Added `fields` option to the [ListRules](#ListRules) endpoint.
+
+## 2017-01-13
+
+- Migrated firewall rules from ufds to moray bucket to support the use
+  of certain special characters in tag names. (requires SAPI metadata
+  `FWRULE_VERSION` 3 or above)
+
+## 2018-03-16
+
+- Added `priority` support for firewall rules. (requires SAPI metadata
+  `FWRULE_VERSION` 4 or above, as well as firewaller and platform
+  image updates to include the changes in [TRITON-75](https://smartos.org/bugview/TRITON-75)
+  and [TRITON-637](https://smartos.org/bugview/TRITON-637))
