@@ -49,9 +49,17 @@ image_uuid=$(curl -sS ${imgapi_url}/images'?name=sdc-smartos' | json 0.uuid)
 billing_id=$(curl -sS ${papi_url}/packages'?name=sample-128M' | json 0.uuid)
 [[ -z ${billing_id} ]] && fatal "Could not find a package named sample-128M in PAPI"
 
-
-servers=( $(curl -sS ${cnapi_url}/servers | json -a uuid setup current_platform | \
-    sort -rk3 | awk '$2 ~ /true/ { print $1 }' | head -n 2) )
+# Find two appropriate servers on which we can provision test VMs.
+# - list setup servers
+# - exclude "Virtual" servers, or Mock CNs from mockcloud because firewaller
+#   isn't (at least currently) running there
+# - only consider running servers
+# - sort to get two servers with the most recent possible platform
+servers=( $(curl -sS "${cnapi_url}/servers?extras=sysinfo&setup=true" \
+    | json -c 'this.sysinfo["System Type"] !== "Virtual"' \
+        -c 'this.status === "running"' \
+        -a uuid setup current_platform \
+    | sort -rk3 | awk '$2 ~ /true/ { print $1 }' | head -n 2) )
 
 [[ -z ${servers[0]} ]] && fatal "Could not get server1 from CNAPI"
 [[ -z ${servers[1]} ]] && fatal "Could not get server2 from CNAPI"
