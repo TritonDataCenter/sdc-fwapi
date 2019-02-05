@@ -49,8 +49,8 @@ function apiConfig(apiName) {
 // --- Exports
 
 
+config.cnapi = apiConfig('cnapi');
 config.fwapi = apiConfig('fwapi');
-config.napi = apiConfig('napi');
 config.vmapi = apiConfig('vmapi');
 config.wfapi = apiConfig('wfapi');
 

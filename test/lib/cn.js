@@ -24,6 +24,7 @@ var fmt = require('util').format;
 var mod_client = require('./client');
 var mod_jsprim = require('jsprim');
 var mod_log = require('./log');
+var netconfig = require('triton-netconfig');
 var restify = require('restify');
 var vasync = require('vasync');
 var VError = require('verror').VError;
@@ -166,16 +167,18 @@ function getAdminIP(t, uuid, callback) {
         return;
     }
 
-    var napi = mod_client.get('napi');
-    napi.listNics({ nic_tags_provided: 'admin', belongs_to_uuid: uuid },
-        function (err, nics) {
-        if (ifErr(t, err, 'listNics for CN ' + uuid)) {
-            return callback(err);
+    var cnapi = mod_client.get('cnapi');
+    cnapi.getServer(uuid, function (err, server) {
+        if (ifErr(t, err, 'get sysinfo for CN' + uuid)) {
+            callback(err);
+            return;
         }
 
-        t.equal(nics.length, 1, '1 admin nic found for CN ' + uuid);
-        ADMIN_IPS[uuid] = nics[0].ip;
-        return callback(null, nics[0].ip);
+        var admin_ip = netconfig.adminIpFromSysinfo(server.sysinfo);
+        t.ok(admin_ip, 'admin IP for CN ' + uuid);
+        ADMIN_IPS[uuid] = admin_ip;
+
+        callback(null, admin_ip);
     });
 }
 

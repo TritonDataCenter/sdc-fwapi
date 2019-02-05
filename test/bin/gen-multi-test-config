@@ -72,7 +72,7 @@ sed -e "s,{{PROVISION_IMAGE}},${image_uuid}," \
     -e "s,{{SERVER1_UUID}},${servers[0]}," \
     -e "s,{{SERVER2_UUID}},${servers[1]}," \
     -e "s,{{FWAPI_URL}},${vmapi_url//vmapi/fwapi}," \
-    -e "s,{{NAPI_URL}},${vmapi_url//vmapi/napi}," \
+    -e "s,{{CNAPI_URL}},${vmapi_url//vmapi/cnapi}," \
     -e "s,{{VMAPI_URL}},${vmapi_url}," \
     -e "s,{{WFAPI_URL}},${vmapi_url//vmapi/wfapi}," \
     ${json_in_file} > ${json_file}
