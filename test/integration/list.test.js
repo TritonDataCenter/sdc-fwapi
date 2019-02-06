@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /*
@@ -16,7 +16,7 @@
 
 var test = require('tape');
 var constants = require('../../lib/util/constants');
-var extend = require('xtend');
+var extend = require('jsprim').mergeObjects;
 var mod_rule = require('../lib/rule');
 var mod_uuid = require('uuid');
 
@@ -27,6 +27,7 @@ var mod_uuid = require('uuid');
 
 
 var OWNERS = [
+    mod_uuid.v4(),
     mod_uuid.v4(),
     mod_uuid.v4(),
     mod_uuid.v4()
@@ -84,6 +85,21 @@ var RULES = [
         enabled: true,
         owner_uuid: OWNERS[2],
         rule: 'FROM any TO all vms ALLOW esp'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM any TO tag "a" = "q" ALLOW icmp TYPE all'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM any TO tag "b" ALLOW icmp6 TYPE all'
+    },
+    {
+        enabled: true,
+        owner_uuid: OWNERS[2],
+        rule: 'FROM tag "c" TO any BLOCK udp PORT 53'
     }
 ];
 
@@ -131,12 +147,12 @@ test('list: all ports', function (t) {
     mod_rule.createAndGet(t, {
         rule: {
             enabled: true,
-            owner_uuid: OWNERS[2],
+            owner_uuid: OWNERS[3],
             rule: 'FROM tag "foo" TO all vms BLOCK udp PORTS 1 - 200, 1 - 65535'
         },
         exp: {
             enabled: true,
-            owner_uuid: OWNERS[2],
+            owner_uuid: OWNERS[3],
             rule: 'FROM tag "foo" TO all vms BLOCK udp PORT all'
         }
     }, function (err) {
@@ -227,6 +243,88 @@ test('list: IPsec protocols', function (t) {
     });
 });
 
+
+test('list: ICMP', function (t) {
+    t.plan(2);
+
+    t.test('list: ICMP - v4', function (t2) {
+        mod_rule.list(t2, {
+            params: {
+                owner_uuid: OWNERS[2],
+                protocol: 'icmp'
+            },
+            exp: [
+                RULES[9]
+            ]
+        });
+    });
+
+    t.test('list: ICMP - v6', function (t2) {
+        mod_rule.list(t2, {
+            params: {
+                owner_uuid: OWNERS[2],
+                protocol: 'icmp6'
+            },
+            exp: [
+                RULES[10]
+            ]
+        });
+    });
+});
+
+
+
+test('list: request parsed "fields"', function (t) {
+    mod_rule.list(t, {
+        params: {
+            owner_uuid: OWNERS[2],
+            fields: constants.PARSED_FIELDS
+        },
+        exp: [
+            extend(RULES[7], {
+                parsed: {
+                    protocol: 'ah',
+                    action: 'allow',
+                    fromtags: {},
+                    totags: {}
+                }
+            }),
+            extend(RULES[8], {
+                parsed: {
+                    protocol: 'esp',
+                    action: 'allow',
+                    fromtags: {},
+                    totags: {}
+                }
+            }),
+            extend(RULES[9], {
+                parsed: {
+                    protocol: 'icmp',
+                    action: 'allow',
+                    fromtags: {},
+                    totags: { a: { all: false, values: [ 'q' ] } }
+                }
+            }),
+            extend(RULES[10], {
+                parsed: {
+                    protocol: 'icmp6',
+                    action: 'allow',
+                    fromtags: {},
+                    totags: { b: { all: true, values: [] } }
+                }
+            }),
+            extend(RULES[11], {
+                parsed: {
+                    protocol: 'udp',
+                    action: 'block',
+                    fromtags: { c: { all: true, values: [] } },
+                    totags: {},
+                    ports: [ 53 ]
+                }
+            })
+        ]
+    });
+});
 
 // --- Teardown
 

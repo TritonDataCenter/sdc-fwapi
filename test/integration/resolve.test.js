@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2019, Joyent, Inc.
  */
 
 /*
@@ -156,6 +156,24 @@ test('setup', function (t) {
             numOneToNumTwo: {
                 rule: 'FROM tag "num" = "one" TO tag "num" = "two" ALLOW '
                     + 'tcp PORT 55'
+            },
+            noopRuleA: {
+                rule: 'FROM tag "a" TO tag "noop?" BLOCK tcp PORT 90 PRIORITY 1'
+            },
+            noopRuleB: {
+                rule: 'FROM tag "b" TO tag "noop?" BLOCK tcp PORT 90'
+            },
+            noopRuleC: {
+                rule: 'FROM tag "noop?" TO tag "c" BLOCK tcp PORT 90'
+            },
+            noopRuleD: {
+                rule: 'FROM tag "noop?" TO tag "d" ALLOW tcp PORT 90 PRIORITY 1'
+            },
+            noopRuleE: {
+                rule: 'FROM tag "noop?" TO tag "e" ALLOW tcp PORT 90'
+            },
+            noopRuleF: {
+                rule: 'FROM tag "f" TO tag "noop?" ALLOW tcp PORT 90'
             }
         },
 
@@ -766,6 +784,21 @@ test('resolve', function (t) {
             rules: [ RULES.o6.vm6ToIp, RULES.o6.vmsOnBothSides ],
             tags: { },
             vms: [ VMS[5], VMS[6] ]
+        } ],
+    [   fmt('Tags from no-op rules are dropped'),
+        {
+            owner_uuid: OWNERS[0],
+            tags: { 'noop?': true }
+        },
+        {
+            allVMs: false,
+            owner_uuid: OWNERS[0],
+            rules: oRules(0, [
+                'noopRuleA', 'noopRuleB', 'noopRuleC',
+                'noopRuleD', 'noopRuleE', 'noopRuleF'
+            ]),
+            tags: { a: true, c: true, d: true, f: true },
+            vms: [ ]
         } ]
     ];
 
