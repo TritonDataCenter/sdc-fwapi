@@ -5,13 +5,14 @@
 #
 
 #
-# Copyright 2017, Joyent, Inc.
+# Copyright (c) 2019, Joyent, Inc.
 #
 
 #
 # FWAPI Makefile
 #
 
+NAME = fwapi
 
 #
 # Tools
@@ -20,6 +21,10 @@ ISTANBUL	:= node_modules/.bin/istanbul
 FAUCET		:= node_modules/.bin/faucet
 TAPE		:= ./node_modules/.bin/tape
 
+ENGBLD_USE_BUILDIMAGE   = true
+ENGBLD_REQUIRE          := $(shell git submodule update --init deps/eng)
+include ./deps/eng/tools/mk/Makefile.defs
+TOP ?= $(error Unable to access eng.git submodule Makefiles.)
 
 #
 # Files
@@ -31,34 +36,35 @@ EXTRA_DOC_DEPS	= deps/restdown-brand-remora/.git
 JS_FILES	:= $(shell ls *.js) $(shell find lib test -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
-ESLINT		= ./node_modules/.bin/eslint
-ESLINT_CONF	= tools/eslint.node.conf
 ESLINT_FILES	= $(JS_FILES)
 JSON_FILES	:= config.json.sample package.json
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0,strict-indent=true
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
-
-
-include ./tools/mk/Makefile.defs
+ 
 ifeq ($(shell uname -s),SunOS)
-	# Allow building on a SmartOS image other than sdc-*-multiarch 15.4.1.
+	# sdc-*-multiarch 15.4.1.
 	NODE_PREBUILT_IMAGE=18b094b0-eb01-11e5-80c1-175dac7ddf02
 	NODE_PREBUILT_VERSION=v0.10.48
 	NODE_PREBUILT_TAG=zone
-	include ./tools/mk/Makefile.node_prebuilt.defs
+	include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
+	include ./deps/eng/tools/mk/Makefile.agent_prebuilt.defs
 else
 	NPM_EXEC :=
 	NPM = npm
 endif
-include ./tools/mk/Makefile.smf.defs
+include ./deps/eng/tools/mk/Makefile.smf.defs
 
 
 TOP             := $(shell pwd)
-RELEASE_TARBALL := fwapi-pkg-$(STAMP).tar.bz2
+RELEASE_TARBALL := $(NAME)-pkg-$(STAMP).tar.gz
 PKGDIR          := $(TOP)/$(BUILD)/pkg
 INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 
+BASE_IMAGE_UUID = 04a48d7d-6bb5-4e83-8c3b-e60a99e0f48f
+BUILDIMAGE_NAME = $(NAME)
+BUILDIMAGE_DESC	= SDC FWAPI
+AGENTS		= amon config registrar
 
 #
 # Repo-specific targets
@@ -66,11 +72,6 @@ INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS) sdc-scripts
 	$(NPM) install --production
-
-$(ESLINT): | $(NPM_EXEC)
-	$(NPM) install \
-	    eslint@`json -f package.json devDependencies.eslint` \
-	    eslint-plugin-joyent@`json -f package.json devDependencies.eslint-plugin-joyent`
 
 $(TAPE): | $(NPM_EXEC)
 	$(NPM) install
@@ -108,7 +109,10 @@ docs/examples.md: node_modules/fwrule/docs/examples.md
 	$(TOP)/tools/restdown-header "Firewall API Examples" > docs/examples.md
 	cat node_modules/fwrule/docs/examples.md >> docs/examples.md
 
-CLEAN_FILES += ./node_modules $(BUILD)/docs docs/examples.md docs/rules.md
+CLEAN_FILES += ./node_modules \
+	$(BUILD)/docs \
+	docs/examples.md \
+	docs/rules.md
 
 
 #
@@ -155,33 +159,24 @@ pkg: all $(SMF_MANIFESTS)
 	rm -rf $(INSTDIR)/node_modules/jison	# we don't need to regenerate the parser
 
 $(RELEASE_TARBALL): pkg
-	(cd $(PKGDIR) && $(TAR) -jcf $(TOP)/$(RELEASE_TARBALL) root site)
+	(cd $(PKGDIR) && $(TAR) -I pigz -cf $(TOP)/$(RELEASE_TARBALL) root site)
 
 .PHONY: publish
 publish: release
-	@if [[ -z "$(BITS_DIR)" ]]; then \
-    echo "error: 'BITS_DIR' must be set for 'publish' target"; \
-    exit 1; \
-  fi
-	mkdir -p $(BITS_DIR)/fwapi
-	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/fwapi/$(RELEASE_TARBALL)
-
-
-.PHONY: check
-check:: $(ESLINT)
-	$(ESLINT) -c $(ESLINT_CONF) $(ESLINT_FILES)
-
+	mkdir -p $(ENGBLD_BITS_DIR)/fwapi
+	cp $(TOP)/$(RELEASE_TARBALL) $(ENGBLD_BITS_DIR)/fwapi/$(RELEASE_TARBALL)
 
 #
 # Includes
 #
-include ./tools/mk/Makefile.deps
+include ./deps/eng/tools/mk/Makefile.deps
 ifeq ($(shell uname -s),SunOS)
-	include ./tools/mk/Makefile.node_prebuilt.targ
+	include ./deps/eng/tools/mk/Makefile.node_prebuilt.targ
+	include ./deps/eng/tools/mk/Makefile.agent_prebuilt.targ
 else
-	include ./tools/mk/Makefile.node.targ
+	include ./deps/eng/tools/mk/Makefile.node.targ
 endif
-include ./tools/mk/Makefile.smf.targ
-include ./tools/mk/Makefile.targ
+include ./deps/eng/tools/mk/Makefile.smf.targ
+include ./deps/eng/tools/mk/Makefile.targ
 
 sdc-scripts: deps/sdc-scripts/.git
