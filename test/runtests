@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright 2016, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 #
@@ -104,28 +104,20 @@ mkdir -p /$OUTPUT_DIR
 
 cd $TOP
 
+# Generate the test config, if necessary.
+vmapi_url=$(json -f /opt/smartdc/fwapi/config.json vmapi.url)
+cnapi_url=${vmapi_url//vmapi/cnapi}
+if [[ ! -f /opt/smartdc/fwapi/test/config.json ]]; then
+    /opt/smartdc/fwapi/test/bin/gen-test-config
+fi
+[[ ! -f /opt/smartdc/fwapi/test/config.json ]] \
+    && fatal "Could not generate multi-server test config"
+
 # Run the integration tests
-multi_test_files=
-test_files=$(ls -1 test/integration/*.test.js)
+test_files=$(ls -1 test/integration/*.test.js test/integration/*.multi-test.js)
 if [[ -n "$opt_test_pattern" ]]; then
     test_files=$(echo "$test_files" | grep "$opt_test_pattern" || true)
     echo "# Running filtered set of test files: $test_files"
-fi
-
-vmapi_url=$(json -f /opt/smartdc/fwapi/config.json vmapi.url)
-cnapi_url=${vmapi_url//vmapi/cnapi}
-
-num_servers=$(curl -sS ${cnapi_url}/servers | json -a uuid setup | grep true | wc -l)
-if [[ ${num_servers} -gt 1 ]]; then
-    echo "# More than 1 server: running multi-server tests"
-    multi_test_files=$(ls -1 test/integration/*.multi-test.js)
-
-    if [[ ! -f /opt/smartdc/fwapi/test/config.json ]]; then
-        # No test config present - generate it
-        /opt/smartdc/fwapi/test/bin/gen-multi-test-config
-    fi
-
-    [[ ! -f /opt/smartdc/fwapi/test/config.json ]] && fatal "Could not generate multi-server test config"
 fi
 
 echo ""
@@ -133,7 +125,7 @@ set +o errexit
 
 test_failed=
 
-for file in $test_files $multi_test_files; do
+for file in $test_files; do
     test_file=$(basename $file)
     echo "# $test_file"
 
@@ -143,12 +135,12 @@ for file in $test_files $multi_test_files; do
     # If a test program crashes, ensure that this
     # script exits non-zero.
     if [[ "$?" != "0" ]]; then
-       if [[ -n "$opt_stop_on_failure" ]]; then
-           break
-       else
-           test_failed="true"
-       fi
-   fi
+        if [[ -n "$opt_stop_on_failure" ]]; then
+            break
+        else
+            test_failed="true"
+        fi
+    fi
 done
 
 set -o errexit

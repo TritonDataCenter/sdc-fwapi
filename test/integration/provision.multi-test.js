@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -26,6 +26,9 @@ var util = require('util');
 // --- Globals
 
 
+var OPTS = {
+    skip: !config.test.server2_uuid
+};
 
 var OWNERS = [ config.test.owner_uuid ];
 var RULES = {};
@@ -41,6 +44,9 @@ var VMS = [];
 
 // --- Setup
 
+if (OPTS.skip) {
+    console.log('# SKIP %s tests (no server2_uuid)', __filename);
+}
 
 function pre_test(t) {
     config.haveTestVars(
@@ -71,8 +77,8 @@ function checkVMsProvisioned(callback) {
  * Add a couple 'FROM any to tag' rules: these explicitly do not reference
  * other VMs, because they allow traffic from 'any'
  */
-test('pre_test', pre_test);
-test('Add rules', function (t) {
+test('pre_test', OPTS, pre_test);
+test('Add rules', OPTS, function (t) {
     t.test('allow SSH', function (t2) {
         RULES.ssh = {
             description: 'allow SSH',
@@ -105,8 +111,7 @@ test('Add rules', function (t) {
 });
 
 
-test('pre_test', pre_test);
-test('Provision VMs', function (t) {
+test('Provision VMs', OPTS, function (t) {
     // Explicitly pick different servers for these VMs, since this is ting
     // that remote VMs get added to other servers.
     var vms = [
@@ -155,8 +160,8 @@ var group_pre_test = function (t) {
     });
 };
 
-test('pre_test', pre_test);
-test('After provision: rules', function (t) {
+test('pre_test', OPTS, pre_test);
+test('After provision: rules', OPTS, function (t) {
 
     // CN 0 (with VM 0): should have the DNS rule but not the SSH rule
     group_pre_test(t);
@@ -215,8 +220,7 @@ test('After provision: rules', function (t) {
 /*
  * Add a disabled rule
  */
-test('pre_test', pre_test);
-test('Add disabled rule', function (t) {
+test('Add disabled rule', OPTS, function (t) {
 
     group_pre_test(t);
     t.test('add', function (t2) {
@@ -285,8 +289,7 @@ test('Add disabled rule', function (t) {
 });
 
 
-test('pre_test', pre_test);
-test('Enable rule', function (t) {
+test('Enable rule', OPTS, function (t) {
 
     group_pre_test(t);
     t.test('enable', function (t2) {
@@ -378,8 +381,7 @@ test('Enable rule', function (t) {
 /*
  * Add a VM -> VM rule
  */
-test('pre_test', pre_test);
-test('Add VMs rule', function (t) {
+test('Add VMs rule', OPTS, function (t) {
 
     group_pre_test(t);
     t.test('add', function (t2) {
@@ -444,8 +446,7 @@ test('Add VMs rule', function (t) {
 // --- Teardown
 
 
-
-test('teardown', function (t) {
+test('teardown', OPTS, function (t) {
     t.test('delete rules', function (t2) {
         mod_rule.delAllCreated(t2);
     });

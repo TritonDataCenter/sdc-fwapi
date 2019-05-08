@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright 2016, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 #
@@ -26,8 +26,13 @@ set -o pipefail
 
 function fatal
 {
-    echo "$(basename $0): fatal error: $*"
+    echo "$(basename $0): fatal error: $*" >&2
     exit 1
+}
+
+function warn
+{
+    echo "$(basename $0): warn: $*" >&2
 }
 
 #---- main
@@ -49,7 +54,7 @@ image_uuid=$(curl -sS ${imgapi_url}/images'?name=sdc-smartos' | json 0.uuid)
 billing_id=$(curl -sS ${papi_url}/packages'?name=sample-128M' | json 0.uuid)
 [[ -z ${billing_id} ]] && fatal "Could not find a package named sample-128M in PAPI"
 
-# Find two appropriate servers on which we can provision test VMs.
+# Find two appropriate servers on which we can provision test VMs, if we can.
 # - list setup servers
 # - exclude "Virtual" servers, or Mock CNs from mockcloud because firewaller
 #   isn't (at least currently) running there
@@ -62,7 +67,7 @@ servers=( $(curl -sS "${cnapi_url}/servers?extras=sysinfo&setup=true" \
     | sort -rk3 | awk '$2 ~ /true/ { print $1 }' | head -n 2) )
 
 [[ -z ${servers[0]} ]] && fatal "Could not get server1 from CNAPI"
-[[ -z ${servers[1]} ]] && fatal "Could not get server2 from CNAPI"
+[[ -z ${servers[1]} ]] && warn "Could not get server2 from CNAPI"
 
 ${dir}/add-test-user
 

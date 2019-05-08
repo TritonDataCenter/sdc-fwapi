@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright 2016, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -26,6 +26,9 @@ var util = require('util');
 // --- Globals
 
 
+var OPTS = {
+    skip: !config.test.server2_uuid
+};
 
 var OWNERS = [ config.test.owner_uuid ];
 var RULES = {};
@@ -41,7 +44,9 @@ var VMS = [];
 
 // --- Setup
 
-
+if (OPTS.skip) {
+    console.log('# SKIP %s tests (no server2_uuid)', __filename);
+}
 
 // Run before every test
 function pre_test(t) {
@@ -69,8 +74,8 @@ function checkVMsProvisioned(t2) {
 
 
 
-test('pre_test', pre_test);
-test('Add rules', function (t) {
+test('pre_test', OPTS, pre_test);
+test('Add rules', OPTS, function (t) {
     t.test('VM 0 to VM 1: SSH', function (t2) {
         RULES.ssh1 = {
             description: 'allow SSH',
@@ -109,7 +114,7 @@ test('Add rules', function (t) {
 /**
  * Provision two VMs with firewalls disabled
  */
-test('Provision VMs', function (t) {
+test('Provision VMs', OPTS, function (t) {
     // Explicitly pick different servers for these VMs, since this is ting
     // that remote VMs get added to other servers.
     var vms = [
@@ -161,7 +166,7 @@ var group_pre_test = function (t) {
  * Since both VMs have firewalls disabled, no rules or RVMs should have
  * been synced to either CN.
  */
-test('After provision: rules', function (t) {
+test('After provision: rules', OPTS, function (t) {
 
     // Since both VMs have their firewalls disabled, neither should have
     // the rule present.
@@ -229,7 +234,7 @@ test('After provision: rules', function (t) {
  * Enable VM 1's firewall. This should cause RVM 0 and the SSH rule to be
  * synced to VM1's CN.
  */
-test('Enable firewall', function (t) {
+test('Enable firewall', OPTS, function (t) {
 
     t.test('update VM', function (t2) {
         mod_vm.update(t2, {
@@ -291,7 +296,7 @@ test('Enable firewall', function (t) {
 });
 
 
-test('Remove "web" tag from VM 2', function (t) {
+test('Remove "web" tag from VM 2', OPTS, function (t) {
 
     t.test('update VM', function (t2) {
         mod_vm.removeTag(t2, {
@@ -326,7 +331,7 @@ test('Remove "web" tag from VM 2', function (t) {
 });
 
 
-test('Add back "web" tag to VM 2', function (t) {
+test('Add back "web" tag to VM 2', OPTS, function (t) {
 
     t.test('update VM', function (t2) {
         VMS[2].tags[TAGS.web] = '4';
@@ -348,7 +353,7 @@ test('Add back "web" tag to VM 2', function (t) {
 });
 
 
-test('Change value of "role" tag on VM 0', function (t) {
+test('Change value of "role" tag on VM 0', OPTS, function (t) {
 
     t.test('update VM', function (t2) {
         VMS[0].tags[TAGS.role] = 'three';
@@ -389,7 +394,7 @@ test('Change value of "role" tag on VM 0', function (t) {
 
 
 
-test('teardown', function (t) {
+test('teardown', OPTS, function (t) {
     t.test('delete rules', mod_rule.delAllCreated);
     t.test('delete VMs', mod_vm.delAllCreated);
     t.end();
