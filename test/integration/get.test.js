@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -37,17 +37,20 @@ var VM_UUIDS = [
 var RULES = [
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM any TO all vms ALLOW tcp PORT 5000'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[1],
         rule: 'FROM (tag "foo" = "bar" OR tag "foo" = "baz") '
             + 'TO tag "side" = "two" ALLOW tcp (PORT 5003 AND PORT 5004)'
     },
     {
         enabled: true,
+        log: false,
         global: true,
         rule: 'FROM any TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
@@ -55,32 +58,38 @@ var RULES = [
     /* IP rule, VM rule, subnet rule */
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM ip 8.8.8.8 TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM ip 4.4.4.4 TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM subnet 10.8.0.0/16 TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM subnet 10.7.0.0/16 TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM vm ' + VM_UUIDS[0] +
             ' TO tag "foo" = "baz" ALLOW tcp PORT 5010'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM vm ' + VM_UUIDS[1] +
             ' TO tag "foo" = "baz" ALLOW tcp PORT 5010'
@@ -89,16 +98,19 @@ var RULES = [
     /* FWRULE_VERSION 4 features */
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM tag "a" TO tag "b" ALLOW tcp PORT 80 PRIORITY 50'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM tag "a" TO tag "b" ALLOW ah'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM tag "a" TO tag "b" ALLOW esp'
     }

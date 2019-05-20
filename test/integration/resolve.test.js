@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2019, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -182,7 +182,8 @@ test('setup', function (t) {
                 owner_uuid: OWNERS[1],
                 rule: fmt('FROM vm %s TO all vms BLOCK udp PORT 54',
                     VMS[2]),
-                enabled: true
+                enabled: true,
+                log: false
             }
         },
 
@@ -190,7 +191,8 @@ test('setup', function (t) {
             oneToAll: {
                 owner_uuid: OWNERS[2],
                 rule: 'FROM tag "one" TO all vms BLOCK udp PORT 55',
-                enabled: true
+                enabled: true,
+                log: false
             }
         },
 
@@ -198,7 +200,8 @@ test('setup', function (t) {
             oneToAll: {
                 owner_uuid: OWNERS[3],
                 rule: 'FROM tag "one" TO all vms ALLOW udp PORT 56',
-                enabled: true
+                enabled: true,
+                log: false
             }
         },
 
@@ -206,7 +209,8 @@ test('setup', function (t) {
             allToOne: {
                 owner_uuid: OWNERS[4],
                 rule: 'FROM all vms TO tag "one" BLOCK udp PORT 57',
-                enabled: true
+                enabled: true,
+                log: false
             }
         },
 
@@ -214,7 +218,8 @@ test('setup', function (t) {
             allToOne: {
                 owner_uuid: OWNERS[5],
                 rule: 'FROM all vms TO tag "one" ALLOW udp PORT 58',
-                enabled: true
+                enabled: true,
+                log: false
             }
         },
 
@@ -222,20 +227,23 @@ test('setup', function (t) {
             vmToOne: {
                 owner_uuid: OWNERS[6],
                 rule: fmt('FROM vm %s TO tag "one" ALLOW udp PORT 59', VMS[4]),
-                enabled: true
+                enabled: true,
+                log: false
             },
 
             vmToOneTwo: {
                 owner_uuid: OWNERS[6],
                 rule: fmt('FROM vm %s TO tag "one" = "two" ALLOW udp PORT 59',
                     VMS[4]),
-                enabled: true
+                enabled: true,
+                log: false
             },
 
             vmToOneThree: {
                 owner_uuid: OWNERS[6],
                 rule: 'FROM any TO tag "one" = "three" ALLOW udp PORT 59',
-                enabled: true
+                enabled: true,
+                log: false
             },
 
             vmToMultiTags: {
@@ -243,21 +251,24 @@ test('setup', function (t) {
                 rule: fmt('FROM vm %s TO '
                     + '(tag "five" = "six" OR tag "three" = "four") '
                     + 'ALLOW udp PORT 58', VMS[3]),
-                enabled: true
+                enabled: true,
+                log: false
             },
 
             ipToVm5: {
                 owner_uuid: OWNERS[6],
                 rule: fmt('FROM ip 10.1.2.5 TO vm %s ALLOW tcp PORT 80',
                     VMS[5]),
-                enabled: true
+                enabled: true,
+                log: false
             },
 
             vm6ToIp: {
                 owner_uuid: OWNERS[6],
                 rule: fmt('FROM vm %s TO ip 10.1.2.5 BLOCK tcp PORT 80',
                     VMS[6]),
-                enabled: true
+                enabled: true,
+                log: false
             },
 
             vmsOnBothSides: {
@@ -265,7 +276,8 @@ test('setup', function (t) {
                 rule: fmt('FROM (ip 10.1.2.5 OR vm %s OR vm %s) TO '
                     + '(ip 10.1.2.5 OR vm %s OR vm %s) ALLOW udp PORT 5432',
                     VMS[5], VMS[6], VMS[5], VMS[6]),
-                enabled: true
+                enabled: true,
+                log: false
             }
         }
     };
@@ -273,6 +285,7 @@ test('setup', function (t) {
     for (r in RULES.o0) {
         RULES.o0[r] = {
             enabled: true,
+            log: false,
             owner_uuid: OWNERS[0],
             rule: RULES.o0[r].rule
         };

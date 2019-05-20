@@ -80,6 +80,7 @@ test('Add rules', OPTS, function (t) {
         RULES.ssh1 = {
             description: 'allow SSH',
             enabled: true,
+            log: false,
             owner_uuid: OWNERS[0],
             rule: util.format(
                 'FROM tag "%s" = "one" TO tag "%s" = "two" ALLOW tcp PORT 22',
@@ -96,6 +97,7 @@ test('Add rules', OPTS, function (t) {
         RULES.web1 = {
             description: 'allow DB access',
             enabled: true,
+            log: false,
             owner_uuid: OWNERS[0],
             rule: util.format(
                 'FROM tag "%s" TO tag "%s" ALLOW tcp PORT 5432',

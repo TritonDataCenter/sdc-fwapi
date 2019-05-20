@@ -238,6 +238,7 @@ test('No new v1 rules created', function (t) {
         rule: 'FROM tag "foo" = "hello-world" TO tag "bar" ALLOW tcp PORT 22',
         description: 'Rule added after migration',
         enabled: true,
+        log: false,
         owner_uuid: migr_data.OWNER_4
     };
 

@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2019, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -36,21 +36,25 @@ var RULES = [
     // Add another rule for this user to make sure we're not return all
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM any TO all vms ALLOW tcp PORT 5000'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM all vms TO subnet 10.2.1.0/24 ALLOW tcp PORT 5001'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM subnet 10.2.1.0/24 TO all vms ALLOW tcp PORT 5002'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM subnet 10.3.1.0/24 TO all vms ALLOW tcp PORT 5002'
     },
@@ -59,16 +63,19 @@ var RULES = [
 
     {
         enabled: true,
+        log: true,
         owner_uuid: OWNERS[1],
         rule: 'FROM subnet 10.2.1.0/24 TO all vms ALLOW tcp PORT 5001'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[1],
         rule: 'FROM tag "foo" TO all vms BLOCK udp PORT all'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[1],
         rule: 'FROM (tag "foo" = "bar" OR tag "foo" = "baz") '
             + 'TO tag "side" = "two" ALLOW tcp (PORT 5003 AND PORT 5004)'
@@ -78,26 +85,31 @@ var RULES = [
 
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM any TO all vms ALLOW ah'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM any TO all vms ALLOW esp'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM any TO tag "a" = "q" ALLOW icmp TYPE all'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM any TO tag "b" ALLOW icmp6 TYPE all'
     },
     {
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[2],
         rule: 'FROM tag "c" TO any BLOCK udp PORT 53'
     }
@@ -143,6 +155,31 @@ test('list: subnet 10.3.1.0/24', function (t) {
     });
 });
 
+test('list: log true', function (t) {
+    mod_rule.list(t, {
+        params: {
+            owner_uuid: OWNERS[1],
+            log: true
+        },
+        exp: [
+            RULES[4]
+        ]
+    });
+});
+
+
+test('list: log false', function (t) {
+    mod_rule.list(t, {
+        params: {
+            owner_uuid: OWNERS[1],
+            log: false
+        },
+        exp: [
+            RULES[5], RULES[6]
+        ]
+    });
+});
+
 test('list: all ports', function (t) {
     mod_rule.createAndGet(t, {
         rule: {
@@ -152,6 +189,7 @@ test('list: all ports', function (t) {
         },
         exp: {
             enabled: true,
+            log: false,
             owner_uuid: OWNERS[3],
             rule: 'FROM tag "foo" TO all vms BLOCK udp PORT all'
         }

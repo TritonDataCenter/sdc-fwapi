@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -59,6 +59,15 @@ function createPayload(ruleTxt) {
           global: 'foobar'
       },
       [ mod_err.invalidParam('global', 'global must be true or false') ] ],
+
+    [ 'bad log value',
+      {
+          rule: 'FROM tag a TO tag b ALLOW udp port 53',
+          enabled: true,
+          global: true,
+          log: 'foobar'
+      },
+      [ mod_err.invalidParam('log', 'log must be true or false') ] ],
 
     [ 'bad IPv4 subnet: bits to right of mask',
       createPayload('FROM tag foo TO subnet 10.8.0.0/5 ALLOW udp port 53'),

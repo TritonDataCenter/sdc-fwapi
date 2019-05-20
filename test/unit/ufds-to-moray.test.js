@@ -233,6 +233,7 @@ test('New rule goes to Moray bucket', function (t) {
         rule: 'FROM tag "foo" = "hello-world" TO tag "bar" ALLOW tcp PORT 22',
         description: 'Rule added after migration',
         enabled: true,
+        log: false,
         owner_uuid: migr_data.OWNER_4
     };
 

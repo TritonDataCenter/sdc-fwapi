@@ -131,6 +131,7 @@ test('Ping FWAPI', function (t) {
 test('Add rule 1', function (t) {
     RULES.push({
         enabled: true,
+        log: false,
         owner_uuid: VMS[0].owner_uuid,
         rule: util.format('FROM vm %s TO vm %s ALLOW tcp PORT 80',
             VMS[0].uuid, VMS[1].uuid)
@@ -176,6 +177,7 @@ test('Add rule 1', function (t) {
 test('Add rule 2', function (t) {
     RULES.push({
         enabled: true,
+        log: false,
         owner_uuid: VMS[0].owner_uuid,
         rule: 'FROM tag "foo" TO tag "bar" = "\\)" ALLOW tcp PORT 80'
     });

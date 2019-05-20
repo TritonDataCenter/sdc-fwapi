@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019, Joyent, Inc.
  */
 
 /*
@@ -46,6 +46,7 @@ test('Add rule', function (t) {
     RULES.push({
         enabled: true,
         global: true,
+        log: false,
         rule: 'FROM any TO all vms ALLOW udp PORT 5000'
     });
 

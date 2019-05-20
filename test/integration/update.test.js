@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -39,6 +39,7 @@ var RULES = [];
 test('Add rule', function (t) {
     RULES.push({
         enabled: true,
+        log: false,
         owner_uuid: OWNERS[0],
         rule: 'FROM all vms TO tag "test" BLOCK tcp PORT 8000'
     });

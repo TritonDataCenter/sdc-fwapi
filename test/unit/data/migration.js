@@ -166,6 +166,7 @@ rules[RULE_1_UUID] = {
         'uuid': RULE_1_UUID,
         'version': RULE_1_VERSION,
         'owner_uuid': OWNER_1,
+        'log': false,
         'enabled': true
     }
 };
@@ -208,6 +209,7 @@ rules[RULE_2_UUID] = {
         'uuid': RULE_2_UUID,
         'version': RULE_2_VERSION,
         'owner_uuid': OWNER_1,
+        'log': false,
         'enabled': true
     }
 };
@@ -253,6 +255,7 @@ rules[RULE_3_UUID] = {
         'uuid': RULE_3_UUID,
         'version': RULE_3_VERSION,
         'owner_uuid': OWNER_2,
+        'log': false,
         'enabled': false
     }
 };
@@ -293,6 +296,7 @@ rules[RULE_4_UUID] = {
         'uuid': RULE_4_UUID,
         'version': RULE_4_VERSION,
         'owner_uuid': OWNER_2,
+        'log': false,
         'enabled': false
     }
 };
@@ -331,6 +335,7 @@ rules[RULE_5_UUID] = {
         'uuid': RULE_5_UUID,
         'version': RULE_5_VERSION,
         'enabled': true,
+        'log': false,
         'global': true
     }
 };
@@ -375,6 +380,7 @@ rules[RULE_6_UUID] = {
         'uuid': RULE_6_UUID,
         'version': RULE_6_VERSION,
         'owner_uuid': OWNER_3,
+        'log': false,
         'enabled': true
     }
 };
@@ -414,6 +420,7 @@ rules[RULE_7_UUID] = {
         'uuid': RULE_7_UUID,
         'version': RULE_7_VERSION,
         'owner_uuid': OWNER_4,
+        'log': false,
         'enabled': true
     }
 };
@@ -453,6 +460,7 @@ rules[RULE_8_UUID] = {
         'uuid': RULE_8_UUID,
         'version': RULE_8_VERSION,
         'owner_uuid': OWNER_4,
+        'log': false,
         'enabled': true
     }
 };
@@ -491,6 +499,7 @@ rules[RULE_9_UUID] = {
         'uuid': RULE_9_UUID,
         'version': RULE_9_VERSION,
         'owner_uuid': OWNER_4,
+        'log': false,
         'enabled': true
     }
 };
@@ -516,6 +525,7 @@ rules[RULE_10_UUID] = {
         'uuid': RULE_10_UUID,
         'version': RULE_10_VERSION,
         'enabled': true,
+        'log': false,
         'global': true
     }
 };
@@ -540,6 +550,7 @@ rules[RULE_11_UUID] = {
         'uuid': RULE_11_UUID,
         'owner_uuid': OWNER_4,
         'version': RULE_11_VERSION,
+        'log': false,
         'enabled': true
     }
 };
@@ -565,6 +576,7 @@ rules[RULE_12_UUID] = {
         'uuid': RULE_12_UUID,
         'owner_uuid': OWNER_4,
         'version': RULE_12_VERSION,
+        'log': false,
         'enabled': true
     }
 };
@@ -618,6 +630,7 @@ function generateRule() {
             'uuid': rule_uuid,
             'version': version,
             'owner_uuid': owner_uuid,
+            'log': false,
             'enabled': true
         }
     };

@@ -20,7 +20,7 @@
     "effluent-logger": "git+https://github.com/joshwilsdon/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
     "extsprintf": "1.0.2",
     "fast-messages": "1.0.1",
-    "fwrule": "2.0.0",
+    "fwrule": "2.1.0",
     "jsprim": "^2.0.0",
     "moray": "^3.5.0",
     "moray-filter": "1.0.0",

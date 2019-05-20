@@ -55,6 +55,7 @@ test('setup', function (t) {
 test('Add rule', function (t) {
     RULES.push({
         enabled: true,
+        log: false,
         owner_uuid: VMS[0].owner_uuid,
         rule: util.format('FROM vm %s TO vm %s ALLOW tcp PORT 80',
             VMS[0].uuid, VMS[1].uuid)

@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright (c) 2014, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 #
@@ -14,7 +14,6 @@
 
 TOP=$(cd $(dirname $0)/../; pwd)
 NODE_INSTALL=$TOP/node
-NODEUNIT=$TOP/node_modules/.bin/nodeunit
 UNAME=$(uname -s)
 
 guard_file=/lib/sdc/.sdc-test-no-production-data

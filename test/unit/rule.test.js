@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright 2019 Joyent, Inc.
  */
 
 /*
@@ -83,6 +83,7 @@ test('all target types', function (t) {
         tovm: [vms[1]],
 
         enabled: true,
+        log: false,
         objectclass: mod_rule.objectclass,
         ports: [ 80, 81 ],
         action: 'allow',
@@ -95,6 +96,8 @@ test('all target types', function (t) {
     inRule.version = rule.version;
 
     t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
+
+    inRule.log = rule.log;
     t.deepEqual(rule.serialize(), inRule, 'rule.serialize()');
     t.equal(rule.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule.dn');
@@ -125,6 +128,7 @@ test('owner_uuid', function (t) {
         fromip: [ util_ip.aton(ip) ],
         tovm: [ vm ],
         enabled: true,
+        log: false,
         objectclass: mod_rule.objectclass,
         owner: inRule.owner_uuid,
         ports: [ 25 ],
@@ -138,6 +142,8 @@ test('owner_uuid', function (t) {
     inRule.version = rule.version;
 
     t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
+
+    inRule.log = rule.log;
     t.deepEqual(rule.serialize(), inRule, 'rule.serialize()');
     t.equal(rule.dn, util.format('uuid=%s, ou=fwrules, o=smartdc', rule.uuid),
         'rule.dn');
@@ -165,6 +171,7 @@ test('multiple tags with multiple quoted values', function (t) {
 
     var raw = {
         enabled: false,
+        log: false,
         objectclass: mod_rule.objectclass,
         ports: [ 80 ],
         action: 'allow',
@@ -187,7 +194,8 @@ test('multiple tags with multiple quoted values', function (t) {
             + '(tag "some tag" = "value" OR tag "some-tag" = "another value") '
             + 'ALLOW tcp PORT 80',
         uuid: rule.uuid,
-        version: rule.version
+        version: rule.version,
+        log: false
     };
     t.deepEqual(rule.serialize(), serialized, 'rule.serialize()');
 
@@ -203,7 +211,6 @@ test('multiple tags with multiple quoted values', function (t) {
 
     // Now check that we can reconstruct this data from UFDS
     rule = mod_rule.create(raw, app);
-    t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
     t.deepEqual(rule.rawUFDS(), raw, 'rule.rawUFDS()');
     t.ok(!rule.allVMs, 'rule.allVMs');
     t.deepEqual(rule.tags, ruleTags, 'rule.tags');
