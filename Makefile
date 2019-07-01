@@ -43,15 +43,16 @@ JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0,strict-indent=tr
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
  
 ifeq ($(shell uname -s),SunOS)
-	# sdc-*-multiarch 15.4.1.
-	NODE_PREBUILT_IMAGE=18b094b0-eb01-11e5-80c1-175dac7ddf02
-	NODE_PREBUILT_VERSION=v0.10.48
-	NODE_PREBUILT_TAG=zone
+	# triton-origin-x86_64 19.1.0
+	NODE_PREBUILT_IMAGE=fbda7200-57e7-11e9-bb3a-8b0b548fcc37
+	NODE_PREBUILT_VERSION=v6.17.0
+	NODE_PREBUILT_TAG=zone64
 	include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
 	include ./deps/eng/tools/mk/Makefile.agent_prebuilt.defs
 else
-	NPM_EXEC :=
-	NPM = npm
+	NODE := node
+	NPM = $(shell which npm)
+	NPM_EXEC := $(NPM)
 endif
 include ./deps/eng/tools/mk/Makefile.smf.defs
 
@@ -61,7 +62,7 @@ RELEASE_TARBALL := $(NAME)-pkg-$(STAMP).tar.gz
 PKGDIR          := $(TOP)/$(BUILD)/pkg
 INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
 
-BASE_IMAGE_UUID = 04a48d7d-6bb5-4e83-8c3b-e60a99e0f48f
+BASE_IMAGE_UUID = cbf116a0-43a5-447c-ad8c-8fa57787351c
 BUILDIMAGE_NAME = $(NAME)
 BUILDIMAGE_DESC	= SDC FWAPI
 AGENTS		= amon config registrar
@@ -84,7 +85,7 @@ $(FAUCET): | $(NPM_EXEC)
 
 .PHONY: test
 test: $(ISTANBUL) $(FAUCET)
-	@$(ISTANBUL) cover --print none test/unit/run.js | $(FAUCET)
+	@$(NODE) $(ISTANBUL) cover --print none test/unit/run.js | $(FAUCET)
 
 .PHONY: teststop
 teststop:
