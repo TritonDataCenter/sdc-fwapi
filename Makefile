@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright (c) 2019, Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 #
@@ -41,11 +41,11 @@ JSON_FILES	:= config.json.sample package.json
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=2,doxygen,unparenthesized-return=0,strict-indent=true
 SMF_MANIFESTS_IN = smf/manifests/fwapi.xml.in
- 
+
 ifeq ($(shell uname -s),SunOS)
-	# triton-origin-x86_64 19.1.0
-	NODE_PREBUILT_IMAGE=fbda7200-57e7-11e9-bb3a-8b0b548fcc37
-	NODE_PREBUILT_VERSION=v6.17.0
+	# minimal-64-lts@19.4.0
+	NODE_PREBUILT_IMAGE=5417ab20-3156-11ea-8b19-2b66f5e7a439
+	NODE_PREBUILT_VERSION=v6.17.1
 	NODE_PREBUILT_TAG=zone64
 	include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
 	include ./deps/eng/tools/mk/Makefile.agent_prebuilt.defs
@@ -61,8 +61,8 @@ TOP             := $(shell pwd)
 RELEASE_TARBALL := $(NAME)-pkg-$(STAMP).tar.gz
 PKGDIR          := $(TOP)/$(BUILD)/pkg
 INSTDIR         := $(PKGDIR)/root/opt/smartdc/fwapi
-
-BASE_IMAGE_UUID = cbf116a0-43a5-447c-ad8c-8fa57787351c
+# triton-origin-x86_64-19.4.0
+BASE_IMAGE_UUID = 59ba2e5e-976f-4e09-8aac-a4a7ef0395f5
 BUILDIMAGE_NAME = $(NAME)
 BUILDIMAGE_DESC	= SDC FWAPI
 AGENTS		= amon config registrar
