@@ -10,7 +10,7 @@ apisections: Rules, Firewalls
 -->
 
 <!--
-    Copyright (c) 2018, Joyent, Inc.
+    Copyright 2021 Joyent, Inc.
 -->
 
 # FWAPI (Firewall API)
@@ -104,7 +104,7 @@ To implement this in FWAPI, you would first add three rules:
 
 **"Anyone on the internet can speak HTTP and HTTPS to the webservers":**
 
-    FROM any TO tag www ALLOW tcp port (80 and 443)
+    FROM any TO tag www ALLOW tcp (port 80 and port 443)
 
 
 **"Webservers *only* can speak to the database servers on the database port":**
@@ -285,11 +285,12 @@ Creates a rule.
 
 ### Example: create a rule
 
-    POST /rules
-        -d description="One new rule"
-        -d enabled=true
-        -d owner_uuid=930896af-bf8c-48d4-885c-6573a94b1853
-        -d rule="FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559"
+    POST /rules -d '{
+        "description": "One new rule",
+        "enabled": true,
+        "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
+        "rule": "FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559"
+	}'
 
     {
       "description": "One new rule",
