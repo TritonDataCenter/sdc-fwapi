@@ -6,7 +6,7 @@
   "private": true,
   "devDependencies": {
     "moray-sandbox": "0.2.1",
-    "faucet": "0.0.1",
+    "faucet": "0.0.3",
     "istanbul": "0.4.5",
     "eslint": "4.19.1",
     "eslint-plugin-joyent": "~2.0.0",
