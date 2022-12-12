@@ -1,8 +1,8 @@
 {
   "name": "fwapi",
   "description": "Firewall API for Triton",
-  "version": "1.1.1",
-  "author": "Joyent",
+  "version": "1.1.2",
+  "author": "MNX Cloud (mnx.io)",
   "private": true,
   "devDependencies": {
     "moray-sandbox": "0.2.1",
@@ -17,7 +17,7 @@
     "bunyan": "1.8.12",
     "clone": "0.1",
     "cmdln": "1.1.1",
-    "effluent-logger": "git+https://github.com/joyent/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
+    "effluent-logger": "git+https://github.com/TritonDataCenter/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
     "extsprintf": "1.0.2",
     "fast-messages": "2.0.1",
     "fwrule": "2.1.0",
