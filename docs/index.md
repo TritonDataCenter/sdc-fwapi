@@ -11,6 +11,7 @@ apisections: Rules, Firewalls
 
 <!--
     Copyright 2021 Joyent, Inc.
+    Copyright 2024 MNX Cloud, Inc.
 -->
 
 # FWAPI (Firewall API)
@@ -124,7 +125,7 @@ There are two more steps necessary:
 * Updating all webserver VMs with tag **www**
 * Updating all database VMs with tag **db**
 
-Please see the [CloudAPI Guide](https://github.com/joyent/sdc-cloudapi/blob/master/docs/index.md#firewallrules)
+Please see the [CloudAPI Guide](https://github.com/TritonDataCenter/sdc-cloudapi/blob/master/docs/index.md#firewallrules)
 for more examples.
 
 # Rule Syntax
@@ -133,8 +134,8 @@ Rules are written in a Doman Specific Language (DSL). References for the rule sy
 can be found in:
 
 * [Rule Syntax Guide](rules.html)
-* [Cloud Firewall Rules Reference](https://docs.joyent.com/public-cloud/network/firewall/cloud-firewall-rules-reference)
-* [CloudAPI Guide - Firewall Rules](https://github.com/joyent/sdc-cloudapi/blob/master/docs/index.md#firewallrules)
+* [Cloud Firewall Rules Reference](https://docs.tritondatacenter.com/public-cloud/network/firewall/cloud-firewall-rules-reference)
+* [CloudAPI Guide - Firewall Rules](https://github.com/TritonDataCenter/sdc-cloudapi/blob/master/docs/index.md#firewallrules)
 
 # Rules
 
