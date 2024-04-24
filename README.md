@@ -6,14 +6,15 @@
 
 <!--
     Copyright 2019 Joyent, Inc.
+    Copyright 2024 MNX Cloud, Inc.
 -->
 
 # sdc-fwapi
 
-This repository is part of the Joyent Triton project. See the [contribution
-guidelines](https://github.com/joyent/triton/blob/master/CONTRIBUTING.md)
+This repository is part of the Triton Data Center project. See the [contribution
+guidelines](https://github.com/TritonDataCenter/triton/blob/master/CONTRIBUTING.md)
 and general documentation at the main
-[Triton project](https://github.com/joyent/triton) page.
+[Triton project](https://github.com/TritonDataCenter/triton) page.
 
 The SDC Firewall API (FWAPI) allows managing firewall rules for VMs. These
 rules are high-level and written in a Domain-Specific Language. For more
@@ -21,9 +22,9 @@ information on the rules and system design, see:
 
 * **docs/index.md** for an overview
 * **docs/architecture.md** for how rules are managed
-* The [sdc-fwrule repo](http://github.com/joyent/sdc-fwrule)
-* [examples.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/examples.md) and
-  [rules.md](https://github.com/joyent/sdc-fwrule/blob/master/docs/rules.md)
+* The [sdc-fwrule repo](http://github.com/TritonDataCenter/sdc-fwrule)
+* [examples.md](https://github.com/TritonDataCenter/sdc-fwrule/blob/master/docs/examples.md) and
+  [rules.md](https://github.com/TritonDataCenter/sdc-fwrule/blob/master/docs/rules.md)
   in the sdc-fwrule repo
 
 The contents of this repo are bundled up into an image that is then provisioned
@@ -55,7 +56,7 @@ as the fwapi zone in SDC.
 
 To get started:
 
-    git clone git@github.com:joyent/sdc-fwapi.git
+    git clone git@github.com:TritonDataCenter/sdc-fwapi.git
     make
 
 To update the docs, edit "docs/index.md", then check that
