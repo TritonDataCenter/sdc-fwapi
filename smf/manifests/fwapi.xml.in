@@ -8,6 +8,7 @@
 
 <!--
     Copyright (c) 2014, Joyent, Inc.
+    Copyright 2024 MNX Cloud, Inc.
 -->
 
 <!--
@@ -32,7 +33,7 @@
 <stability value='Unstable' />
 
 <template>
-	<common_name><loctext xml:lang="C">Joyent Firewall API</loctext></common_name>
+	<common_name><loctext xml:lang="C">Triton Cloud Firewall API</loctext></common_name>
 </template>
 
 </service>

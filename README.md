@@ -51,7 +51,6 @@ as the fwapi zone in SDC.
     README.md
     server.js           API server main entry point
 
-
 # Development
 
 To get started:
@@ -75,7 +74,6 @@ To run all checks and tests:
 Before commiting/pushing run `make prepush` and, if possible, get a code
 review. For non-trivial changes, a unit or integration test that covers the
 new behaviour is required.
-
 
 # Testing
 

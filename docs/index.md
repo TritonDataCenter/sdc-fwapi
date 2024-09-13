@@ -14,12 +14,12 @@ apisections: Rules, Firewalls
     Copyright 2024 MNX Cloud, Inc.
 -->
 
+<!-- markdownlint-disable single-title -->
+
 # FWAPI (Firewall API)
 
 This is the reference documentation for FWAPI, the Firewall API for
 SmartDataCenter (SDC).
-
-
 
 # Overview
 
@@ -55,7 +55,6 @@ The default policy for a VM with its firewall enabled is:
 This default policy cannot be changed - you must add rules that get applied
 in addition to these defaults.
 
-
 ## Rules
 
 Important things to remember:
@@ -79,7 +78,6 @@ goes counter to the default policy takes precedence.  This means:
 * If you have an outgoing BLOCK and an outgoing ALLOW rule for the
   same VM and port, the BLOCK will override.
 
-
 ## VMs
 
 Important things to remember:
@@ -100,25 +98,21 @@ firewall behaviour:
 * Webservers *only* can speak to the database servers on the database port
 * Webservers and database servers can SSH to each other
 
-
 To implement this in FWAPI, you would first add three rules:
 
 **"Anyone on the internet can speak HTTP and HTTPS to the webservers":**
 
     FROM any TO tag www ALLOW tcp (port 80 and port 443)
 
-
 **"Webservers *only* can speak to the database servers on the database port":**
 
     FROM tag www TO tag db ALLOW tcp port 5432
-
 
 **"Webservers and database servers can SSH to each other":**
 
     FROM all vms to all vms ALLOW tcp port 22
 
 "all vms" here means "all VM instances that are owned by that user"
-
 
 There are two more steps necessary:
 
@@ -140,7 +134,6 @@ can be found in:
 # Rules
 
 These endpoints manage firewall rules.
-
 
 ## ListRules (GET /rules)
 
@@ -172,7 +165,6 @@ Valid fields are:
 | parsed.protocol | Rule protocol (in the `parsed` object)                         |
 | parsed.tags     | Rule tags (in the `parsed` object)                             |
 
-
 ### Example: list all rules belonging to a specific owner_uuid
 
     GET /rules
@@ -197,7 +189,6 @@ Valid fields are:
         }
     ]
 
-
 ## GetRule (GET /rules/:uuid)
 
 Returns a rule.
@@ -218,7 +209,6 @@ Returns a rule.
       "uuid": "d92dcf67-a74b-4fda-9019-82a5d74af551",
       "version": "1386898045802.093012"
     }
-
 
 ## UpdateRule (PUT /rules/:uuid)
 
@@ -250,7 +240,6 @@ Modifies a rule.
       "version": "1386898045802.093012"
     }
 
-
 ## GetRuleVMs (GET /rules/:uuid/vms)
 
 Returns the VMs affected by a rule.
@@ -266,7 +255,6 @@ Returns the VMs affected by a rule.
     GET /rules/fb5ad3b7-9602-43c8-b286-8a7c0627a438/vms | json -a uuid
         2a832664-a9b5-40e7-b1bf-43ad90ac4172
         2ca7d243-215f-41d7-a8ed-c83e4712a8bf
-
 
 ## CreateRule (POST /rules)
 
@@ -291,7 +279,7 @@ Creates a rule.
         "enabled": true,
         "owner_uuid": "930896af-bf8c-48d4-885c-6573a94b1853",
         "rule": "FROM (ip 10.99.99.254 OR ip 10.99.99.7) TO vm dfbcc139-990f-4b49-bb62-d3d6bd2fd52d ALLOW tcp PORT 559"
-	}'
+  }'
 
     {
       "description": "One new rule",
@@ -301,7 +289,6 @@ Creates a rule.
       "uuid": "d92dcf67-a74b-4fda-9019-82a5d74af551",
       "version": "1386898045802.093012"
     }
-
 
 ## DeleteRule (DELETE /rules/:uuid)
 
@@ -320,12 +307,9 @@ Deletes a rule.
 
     {}
 
-
-
 # Firewalls
 
 These endpoints display the firewall rules that apply to VMs.
-
 
 ## GetVMrules (GET /firewalls/vms/:uuid)
 
@@ -358,8 +342,6 @@ Returns the rules that apply to a VM.
           "version": "1362178611215.099554"
         }
     ]
-
-
 
 # Resolve
 
@@ -438,7 +420,6 @@ For a given set of VMs that have a certain set of tags,
       "owner_uuid": "98c2d1f4-66f4-468c-97ff-4b19c5d9ab22"
     }
 
-
 In the response above:
 
 * *rules* is the list of rules that apply to that set of VMs and tags.
@@ -452,8 +433,6 @@ In the response above:
 Note that the values returned effectively form an OR query, so for the example
 above, we need to retrieve VMs with (tag role = db) OR (role = www) OR (tag
 something).
-
-
 
 # Changelog
 
